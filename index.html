@@ -32,10 +32,11 @@
     <div id="login-screen" class="fixed inset-0 bg-gradient-to-b from-rose-50 to-rose-100/70 flex items-center justify-center z-50 backdrop-blur-sm p-4">
         <div class="bg-white p-8 rounded-2xl shadow-xl shadow-rose-200/40 w-full max-w-sm border border-rose-100">
             <div class="flex flex-col items-center mb-1">
-                <span class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-rose-500 text-white text-lg shadow-md shadow-rose-300/50 mb-2"><i class="fas fa-utensils"></i></span>
+                <span class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-rose-500 text-white text-lg shadow-md shadow-rose-300/50 ring-2 ring-amber-300 ring-offset-2 ring-offset-white mb-2"><i class="fas fa-utensils"></i></span>
                 <h2 class="font-display text-2xl font-bold text-rose-700">MajuChef</h2>
+                <div class="w-10 h-0.5 bg-gradient-to-r from-transparent via-amber-300 to-transparent mt-2"></div>
             </div>
-            <p class="text-center text-stone-400 text-sm mb-6 italic">Onde comemos, o que pedimos, o que achamos.</p>
+            <p class="text-center text-stone-400 text-sm mb-6 mt-3 italic">Onde comemos, o que pedimos, o que achamos.</p>
             <form id="login-form" class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-stone-500 mb-1">E-mail</label>
@@ -54,9 +55,9 @@
 
     <!-- APP PRINCIPAL -->
     <div id="app" class="hidden max-w-md mx-auto min-h-screen flex flex-col pb-24">
-        <header class="sticky top-0 z-30 bg-rose-50/95 backdrop-blur-sm border-b border-rose-100 px-4 pt-4 pb-3">
+        <header class="sticky top-0 z-30 bg-rose-50/95 backdrop-blur-sm border-b border-amber-200/60 px-4 pt-4 pb-3">
             <div class="flex items-center justify-between mb-3">
-                <h1 class="font-display text-lg font-bold text-rose-700 flex items-center"><span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-rose-500 text-white text-xs mr-2"><i class="fas fa-utensils"></i></span>MajuChef</h1>
+                <h1 class="font-display text-lg font-bold text-rose-700 flex items-center"><span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-rose-500 text-white text-xs ring-2 ring-amber-300/80 mr-2"><i class="fas fa-utensils"></i></span>MajuChef</h1>
                 <button id="btn-logout" class="text-stone-400 hover:text-rose-600 text-sm transition"><i class="fas fa-sign-out-alt"></i></button>
             </div>
             <div class="relative">
@@ -68,7 +69,7 @@
         </header>
 
         <main class="flex-1 px-4 pt-4">
-            <div id="empty-state" class="hidden text-center p-10 text-stone-400 bg-rose-50/70 rounded-xl border border-dashed border-rose-200">
+            <div id="empty-state" class="hidden text-center p-10 text-stone-400 bg-rose-50/70 rounded-xl border border-dashed border-amber-300/50">
                 Nenhum restaurante registrado ainda. Toque no + para adicionar o primeiro.
             </div>
             <div id="permission-error" class="hidden text-center p-6 text-amber-600 bg-amber-50 rounded-xl border border-amber-300 text-sm">
@@ -79,7 +80,7 @@
     </div>
 
     <!-- BOTÃO FLUTUANTE DE ADICIONAR -->
-    <button id="btn-open-add" class="hidden fixed bottom-6 right-6 z-30 w-14 h-14 rounded-full bg-rose-500 hover:bg-rose-400 text-white text-xl shadow-lg shadow-rose-300/50 flex items-center justify-center transition">
+    <button id="btn-open-add" class="hidden fixed bottom-6 right-6 z-30 w-14 h-14 rounded-full bg-rose-500 hover:bg-rose-400 text-white text-xl shadow-lg shadow-rose-300/50 ring-2 ring-amber-300 ring-offset-2 ring-offset-rose-50 flex items-center justify-center transition">
         <i class="fas fa-plus"></i>
     </button>
 
