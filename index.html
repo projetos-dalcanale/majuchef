@@ -53,6 +53,7 @@
                 <i class="fas fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-sm"></i>
                 <input type="text" id="search-input" placeholder="Buscar por restaurante..." class="w-full pl-9 p-2.5 text-sm rounded-lg bg-white border border-stone-200 text-stone-800 focus:border-amber-500 outline-none transition">
             </div>
+            <div id="filter-chips" class="hidden flex flex-wrap gap-2 mt-2"></div>
         </header>
 
         <main class="flex-1 px-4 pt-4">
@@ -84,13 +85,14 @@
 
                 <div>
                     <label class="block text-xs font-semibold text-stone-500 mb-1 uppercase tracking-wider">Cole um texto (opcional)</label>
-                    <textarea id="paste-text" rows="5" placeholder="Restaurante: Nome do restaurante
+                    <textarea id="paste-text" rows="6" placeholder="Restaurante: Nome do restaurante
+Tipo: Japonesa
 Data: 20/09/2026
 Endereço: Rua Exemplo, 123
 Prato: Nome do prato - Nota
 Prato: Outro prato - Nota
 Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-stone-300 rounded-lg bg-stone-50 text-stone-800 focus:border-amber-500 outline-none transition font-mono"></textarea>
-                    <p class="text-[11px] text-stone-400 mt-1 leading-tight">Use uma linha para cada campo, começando com <span class="text-stone-500">Restaurante:</span>, <span class="text-stone-500">Data:</span>, <span class="text-stone-500">Endereço:</span>, <span class="text-stone-500">Prato:</span> (uma por prato, terminando com "- Nota") e <span class="text-stone-500">Obs:</span>.</p>
+                    <p class="text-[11px] text-stone-400 mt-1 leading-tight">Use uma linha para cada campo, começando com <span class="text-stone-500">Restaurante:</span>, <span class="text-stone-500">Tipo:</span>, <span class="text-stone-500">Data:</span>, <span class="text-stone-500">Endereço:</span>, <span class="text-stone-500">Prato:</span> (uma por prato, terminando com "- Nota") e <span class="text-stone-500">Obs:</span>.</p>
                     <button type="button" id="btn-parse" class="mt-2 w-full bg-stone-100 hover:bg-stone-200 text-amber-600 text-sm font-semibold py-2 rounded-lg transition"><i class="fas fa-wand-magic-sparkles mr-2"></i>Preencher campos com esse texto</button>
                 </div>
 
@@ -98,6 +100,12 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-sto
                     <div>
                         <label class="block text-xs font-semibold text-stone-500 mb-1 uppercase tracking-wider">Restaurante</label>
                         <input type="text" id="f-restaurante" maxlength="150" required class="w-full p-2.5 text-sm border border-stone-300 rounded-lg bg-stone-50 text-stone-800 focus:border-amber-500 outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-stone-500 mb-1 uppercase tracking-wider">Tipo de comida</label>
+                        <select id="f-tipo" class="w-full p-2.5 text-sm border border-stone-300 rounded-lg bg-stone-50 text-stone-800 focus:border-amber-500 outline-none transition">
+                            <option value="">Selecione...</option>
+                        </select>
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
@@ -161,8 +169,26 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-sto
         let currentUser = null;
         let entries = [];
         let searchTerm = '';
+        let filterTipo = '';     // tipo de comida selecionado no filtro ('' = todos)
         let draftId = null;      // id do registro sendo criado/editado no modal
         let isEditing = false;
+
+        // Tipos de comida disponíveis para cadastro e filtro
+        const TIPOS_COMIDA = [
+            'Brasileira', 'Italiana', 'Japonesa', 'Árabe', 'Hambúrguer', 'Pizza',
+            'Poke', 'Chinesa', 'Mexicana', 'Churrascaria', 'Vegetariana/Vegana',
+            'Francesa', 'Padaria/Cafeteria', 'Doceria/Sorveteria', 'Outro'
+        ];
+
+        // Cor de acordo com a nota: < 5 vermelho, 5 a 7 laranja, 8 a 10 verde
+        const notaBadgeClasses = (notaStr) => {
+            if (!notaStr) return 'bg-stone-50 border-stone-200 text-stone-600';
+            const num = parseFloat(String(notaStr).trim().replace(',', '.'));
+            if (isNaN(num)) return 'bg-stone-50 border-stone-200 text-stone-600';
+            if (num < 5) return 'bg-red-50 border-red-300 text-red-600';
+            if (num < 8) return 'bg-orange-50 border-orange-300 text-orange-600';
+            return 'bg-emerald-50 border-emerald-300 text-emerald-600';
+        };
 
         // SEGURANÇA: escapa qualquer valor antes de inseri-lo via innerHTML,
         // para que texto digitado (nome do restaurante, prato, observações etc.)
@@ -183,7 +209,45 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-sto
         const cardsList = document.getElementById('cards-list');
         const emptyState = document.getElementById('empty-state');
         const permissionError = document.getElementById('permission-error');
+        const filterChipsEl = document.getElementById('filter-chips');
         let unsubscribeSnapshot = null;
+
+        // Popula o <select> de tipo de comida do modal a partir da lista única TIPOS_COMIDA
+        const tipoSelect = document.getElementById('f-tipo');
+        TIPOS_COMIDA.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t;
+            opt.textContent = t;
+            tipoSelect.appendChild(opt);
+        });
+
+        // Chips de filtro por tipo de comida (só mostra os tipos que existem nos registros)
+        const renderFilterChips = () => {
+            const presentTipos = TIPOS_COMIDA.filter(t => entries.some(en => en.tipo === t));
+            if (presentTipos.length === 0) {
+                filterChipsEl.innerHTML = '';
+                filterChipsEl.classList.add('hidden');
+                filterChipsEl.classList.remove('flex');
+                return;
+            }
+            filterChipsEl.classList.remove('hidden');
+            filterChipsEl.classList.add('flex');
+            const chipClass = (active) => active
+                ? 'px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-600 text-white transition'
+                : 'px-3 py-1.5 rounded-full text-xs font-semibold bg-white border border-stone-200 text-stone-500 hover:border-amber-400 transition';
+            let html = `<button type="button" data-tipo="" class="${chipClass(filterTipo === '')}">Todos</button>`;
+            presentTipos.forEach(t => {
+                html += `<button type="button" data-tipo="${escapeHtml(t)}" class="${chipClass(filterTipo === t)}">${escapeHtml(t)}</button>`;
+            });
+            filterChipsEl.innerHTML = html;
+        };
+
+        filterChipsEl.addEventListener('click', (e) => {
+            const btn = e.target.closest('button[data-tipo]');
+            if (!btn) return;
+            filterTipo = btn.dataset.tipo;
+            renderCards();
+        });
 
         // ===================== AUTENTICAÇÃO =====================
         onAuthStateChanged(auth, (user) => {
@@ -252,17 +316,29 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-sto
         });
 
         const renderCards = () => {
-            let filtered = entries.filter(en => !searchTerm || (en.restaurante || '').toLowerCase().includes(searchTerm));
+            renderFilterChips();
+
+            let filtered = entries.filter(en => {
+                const matchesSearch = !searchTerm || (en.restaurante || '').toLowerCase().includes(searchTerm);
+                const matchesTipo = !filterTipo || en.tipo === filterTipo;
+                return matchesSearch && matchesTipo;
+            });
             filtered.sort((a, b) => (b.data || '').localeCompare(a.data || '') || (b.createdAt || '').localeCompare(a.createdAt || ''));
 
             cardsList.innerHTML = '';
             emptyState.classList.toggle('hidden', entries.length > 0);
 
+            if (entries.length > 0 && filtered.length === 0) {
+                cardsList.innerHTML = '<div class="text-center p-8 text-stone-400 text-sm">Nenhum restaurante encontrado com esse filtro.</div>';
+                return;
+            }
+
             filtered.forEach(en => {
                 const pratos = Array.isArray(en.pratos) ? en.pratos : [];
-                const badges = pratos.slice(0, 4).map(p =>
-                    `<span class="bg-stone-50 border border-stone-200 text-stone-600 text-[11px] px-2 py-1 rounded-full">${escapeHtml(p.nome) || 'Prato'}${p.nota ? ' · ' + escapeHtml(p.nota) : ''}</span>`
-                ).join(' ');
+                const badges = pratos.slice(0, 4).map(p => {
+                    const cls = notaBadgeClasses(p.nota);
+                    return `<span class="${cls} border text-[11px] px-2 py-1 rounded-full">${escapeHtml(p.nome) || 'Prato'}${p.nota ? ' · ' + escapeHtml(p.nota) : ''}</span>`;
+                }).join(' ');
                 const extra = pratos.length > 4 ? `<span class="text-[11px] text-stone-400">+${pratos.length - 4}</span>` : '';
                 const dataFmt = en.data ? formatDateBR(en.data) : '';
 
@@ -276,7 +352,8 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-sto
                             <div class="font-bold text-stone-800 truncate">${escapeHtml(en.restaurante) || 'Sem nome'}</div>
                             ${dataFmt ? `<div class="text-[11px] text-stone-400 whitespace-nowrap">${escapeHtml(dataFmt)}</div>` : ''}
                         </div>
-                        ${en.endereco ? `<div class="text-xs text-stone-400 truncate mt-0.5"><i class="fas fa-location-dot mr-1 opacity-60"></i>${escapeHtml(en.endereco)}</div>` : ''}
+                        ${en.tipo ? `<span class="inline-block text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full mt-1">${escapeHtml(en.tipo)}</span>` : ''}
+                        ${en.endereco ? `<div class="text-xs text-stone-400 truncate mt-1"><i class="fas fa-location-dot mr-1 opacity-60"></i>${escapeHtml(en.endereco)}</div>` : ''}
                         <div class="flex flex-wrap gap-1 mt-2">${badges}${extra}</div>
                     </div>
                 `;
@@ -293,7 +370,7 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-sto
         // ===================== PARSER DE TEXTO (sem IA, baseado em padrão fixo) ====
         const parseText = (text) => {
             const lines = text.split('\n');
-            const result = { restaurante: '', data: '', endereco: '', obs: '', pratos: [] };
+            const result = { restaurante: '', tipo: '', data: '', endereco: '', obs: '', pratos: [] };
             let obsStarted = false;
             const obsLines = [];
 
@@ -303,6 +380,10 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-sto
 
                 if (/^restaurante\s*:/i.test(line)) {
                     result.restaurante = line.replace(/^restaurante\s*:/i, '').trim();
+                } else if (/^tipo\s*:/i.test(line)) {
+                    const raw = line.replace(/^tipo\s*:/i, '').trim();
+                    const match = TIPOS_COMIDA.find(t => t.toLowerCase() === raw.toLowerCase());
+                    result.tipo = match || '';
                 } else if (/^data\s*:/i.test(line)) {
                     const raw = line.replace(/^data\s*:/i, '').trim();
                     const m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
@@ -337,6 +418,7 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-sto
             if (!text.trim()) return;
             const parsed = parseText(text);
             document.getElementById('f-restaurante').value = parsed.restaurante;
+            document.getElementById('f-tipo').value = parsed.tipo || '';
             if (parsed.data) document.getElementById('f-data').value = parsed.data;
             document.getElementById('f-endereco').value = parsed.endereco;
             document.getElementById('f-obs').value = parsed.obs;
@@ -345,6 +427,20 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-sto
 
         // ===================== LINHAS DE PRATOS (dinâmicas) =====================
         const pratosList = document.getElementById('pratos-list');
+
+        // Feedback visual (borda colorida) no campo de nota, seguindo as mesmas faixas dos badges
+        const applyNotaInputColor = (inputEl) => {
+            inputEl.classList.remove('border-red-400', 'border-orange-400', 'border-emerald-400', 'border-stone-300');
+            const raw = inputEl.value.trim();
+            const num = parseFloat(raw.replace(',', '.'));
+            if (raw && !isNaN(num)) {
+                if (num < 5) inputEl.classList.add('border-red-400');
+                else if (num < 8) inputEl.classList.add('border-orange-400');
+                else inputEl.classList.add('border-emerald-400');
+            } else {
+                inputEl.classList.add('border-stone-300');
+            }
+        };
 
         const addPratoRow = (nome = '', nota = '') => {
             const row = document.createElement('div');
@@ -363,6 +459,8 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-sto
             inputNota.maxLength = 20;
             inputNota.value = nota;
             inputNota.className = 'prato-nota w-20 p-2 text-sm border border-stone-300 rounded-lg bg-stone-50 text-stone-800 focus:border-amber-500 outline-none transition';
+            inputNota.addEventListener('input', () => applyNotaInputColor(inputNota));
+            applyNotaInputColor(inputNota);
 
             const btnRemove = document.createElement('button');
             btnRemove.type = 'button';
@@ -390,6 +488,7 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-sto
         const resetModalFields = () => {
             document.getElementById('paste-text').value = '';
             document.getElementById('f-restaurante').value = '';
+            document.getElementById('f-tipo').value = '';
             document.getElementById('f-data').value = new Date().toISOString().slice(0, 10);
             document.getElementById('f-endereco').value = '';
             document.getElementById('f-obs').value = '';
@@ -414,6 +513,7 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-sto
             draftId = id;
             document.getElementById('paste-text').value = '';
             document.getElementById('f-restaurante').value = en.restaurante || '';
+            document.getElementById('f-tipo').value = en.tipo || '';
             document.getElementById('f-data').value = en.data || '';
             document.getElementById('f-endereco').value = en.endereco || '';
             document.getElementById('f-obs').value = en.obs || '';
@@ -442,6 +542,7 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-sto
 
             const data = {
                 restaurante,
+                tipo: document.getElementById('f-tipo').value || '',
                 data: document.getElementById('f-data').value || '',
                 endereco: document.getElementById('f-endereco').value.trim(),
                 obs: document.getElementById('f-obs').value.trim(),
