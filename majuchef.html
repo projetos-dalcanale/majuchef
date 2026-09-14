@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>MajuChef</title>
+
+    <!-- Deixa o site "instalável" na tela inicial do iPhone (Compartilhar -> Adicionar à Tela de Início) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MajuChef">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-slate-900 text-slate-300 font-sans min-h-screen">
+
+    <!-- TELA DE LOGIN -->
+    <div id="login-screen" class="fixed inset-0 bg-slate-900/95 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+        <div class="bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm border border-slate-700">
+            <h2 class="text-2xl font-bold mb-1 text-center text-amber-400"><i class="fas fa-utensils mr-2"></i>MajuChef</h2>
+            <p class="text-center text-slate-500 text-sm mb-6">Onde comemos, o que pedimos, o que achamos.</p>
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-400 mb-1">E-mail</label>
+                    <input type="email" id="auth-email" required autocomplete="email" class="w-full rounded-lg bg-slate-700 border-slate-600 text-white focus:border-amber-500 focus:ring-1 focus:ring-amber-500 p-2.5 outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-400 mb-1">Senha</label>
+                    <input type="password" id="auth-password" required minlength="6" autocomplete="current-password" class="w-full rounded-lg bg-slate-700 border-slate-600 text-white focus:border-amber-500 focus:ring-1 focus:ring-amber-500 p-2.5 outline-none transition">
+                </div>
+                <div class="text-red-400 text-sm hidden bg-red-900/20 p-2 rounded border border-red-800" id="auth-error"></div>
+                <button type="submit" class="w-full bg-amber-600 text-white font-bold p-3 rounded-lg hover:bg-amber-500 transition shadow-lg shadow-amber-900/30">Entrar / Cadastrar</button>
+                <p class="text-xs text-slate-500 text-center mt-2">Se o e-mail não existir, uma conta é criada automaticamente. Só quem estiver na lista de acesso (definida nas regras do Firestore) consegue ver os registros.</p>
+            </form>
+        </div>
+    </div>
+
+    <!-- APP PRINCIPAL -->
+    <div id="app" class="hidden max-w-md mx-auto min-h-screen flex flex-col pb-24">
+        <header class="sticky top-0 z-30 bg-slate-900/95 backdrop-blur-sm border-b border-slate-800 px-4 pt-4 pb-3">
+            <div class="flex items-center justify-between mb-3">
+                <h1 class="text-lg font-bold text-amber-400"><i class="fas fa-utensils mr-2"></i>MajuChef</h1>
+                <button id="btn-logout" class="text-slate-500 hover:text-white text-sm transition"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+            <div class="relative">
+                <i class="fas fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+                <input type="text" id="search-input" placeholder="Buscar por restaurante..." class="w-full pl-9 p-2.5 text-sm rounded-lg bg-slate-800 border border-slate-700 text-white focus:border-amber-500 outline-none transition">
+            </div>
+        </header>
+
+        <main class="flex-1 px-4 pt-4">
+            <div id="empty-state" class="hidden text-center p-10 text-slate-500 bg-slate-800/50 rounded-xl border border-dashed border-slate-700">
+                Nenhum restaurante registrado ainda. Toque no + para adicionar o primeiro.
+            </div>
+            <div id="permission-error" class="hidden text-center p-6 text-amber-300 bg-amber-900/20 rounded-xl border border-amber-800 text-sm">
+                Este e-mail não tem permissão para ver esses registros. Confira se ele foi adicionado na lista de e-mails autorizados nas regras do Firestore.
+            </div>
+            <div id="cards-list" class="space-y-3"></div>
+        </main>
+    </div>
+
+    <!-- BOTÃO FLUTUANTE DE ADICIONAR -->
+    <button id="btn-open-add" class="hidden fixed bottom-6 right-6 z-30 w-14 h-14 rounded-full bg-amber-600 hover:bg-amber-500 text-white text-xl shadow-lg shadow-amber-900/40 flex items-center justify-center transition">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <!-- MODAL DE ADICIONAR / EDITAR -->
+    <div id="entry-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50 p-0 sm:p-4">
+        <div class="bg-slate-800 sm:rounded-2xl shadow-2xl w-full sm:max-w-lg h-full sm:h-auto sm:max-h-[92vh] flex flex-col border-0 sm:border border-slate-700 overflow-hidden">
+
+            <div class="bg-slate-900 p-4 border-b border-slate-700 flex justify-between items-center">
+                <h2 id="modal-title" class="text-lg font-bold text-white">Novo Registro</h2>
+                <button onclick="closeModal()" class="text-slate-500 hover:text-white text-2xl leading-none transition">&times;</button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-5 space-y-5">
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Cole um texto (opcional)</label>
+                    <textarea id="paste-text" rows="5" placeholder="Restaurante: Nome do restaurante
+Data: 20/09/2026
+Endereço: Rua Exemplo, 123
+Prato: Nome do prato - Nota
+Prato: Outro prato - Nota
+Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-slate-900 text-white focus:border-amber-500 outline-none transition font-mono"></textarea>
+                    <p class="text-[11px] text-slate-500 mt-1 leading-tight">Use uma linha para cada campo, começando com <span class="text-slate-400">Restaurante:</span>, <span class="text-slate-400">Data:</span>, <span class="text-slate-400">Endereço:</span>, <span class="text-slate-400">Prato:</span> (uma por prato, terminando com "- Nota") e <span class="text-slate-400">Obs:</span>.</p>
+                    <button type="button" id="btn-parse" class="mt-2 w-full bg-slate-700 hover:bg-slate-600 text-amber-300 text-sm font-semibold py-2 rounded-lg transition"><i class="fas fa-wand-magic-sparkles mr-2"></i>Preencher campos com esse texto</button>
+                </div>
+
+                <div class="border-t border-slate-700 pt-4 space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Restaurante</label>
+                        <input type="text" id="f-restaurante" maxlength="150" required class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-slate-900 text-white focus:border-amber-500 outline-none transition">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Data</label>
+                            <input type="date" id="f-data" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-slate-900 text-white focus:border-amber-500 outline-none transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Endereço</label>
+                            <input type="text" id="f-endereco" maxlength="200" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-slate-900 text-white focus:border-amber-500 outline-none transition">
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Pratos e notas</label>
+                            <button type="button" id="btn-add-prato" class="text-amber-400 hover:text-amber-300 text-xs transition"><i class="fas fa-plus"></i> Adicionar prato</button>
+                        </div>
+                        <div id="pratos-list" class="space-y-2"></div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Observações</label>
+                        <textarea id="f-obs" rows="3" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-slate-900 text-white focus:border-amber-500 outline-none transition"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wider">Fotos</label>
+                        <input type="file" id="f-fotos" accept="image/*" multiple capture="environment" class="text-xs text-slate-400 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-slate-700 file:text-amber-300 file:text-xs hover:file:bg-slate-600">
+                        <div id="fotos-preview" class="flex flex-wrap gap-2 mt-3"></div>
+                        <p id="foto-status" class="text-[11px] text-slate-500 mt-1 hidden">Enviando foto...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-slate-700 bg-slate-900 flex justify-between gap-3">
+                <button id="btn-delete-entry" class="hidden px-4 py-2.5 text-red-400 font-semibold hover:bg-red-900/20 rounded-lg transition text-sm"><i class="fas fa-trash mr-1"></i> Excluir</button>
+                <div class="flex gap-3 ml-auto">
+                    <button onclick="closeModal()" class="px-4 py-2.5 text-slate-300 font-semibold hover:bg-slate-700 rounded-lg transition text-sm">Cancelar</button>
+                    <button id="btn-save-entry" class="px-6 py-2.5 bg-amber-600 text-white font-bold rounded-lg shadow-lg shadow-amber-900/30 hover:bg-amber-500 transition text-sm">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+
+        // =====================================================================
+        // PREENCHA AQUI com a config do SEU projeto Firebase (Project settings
+        // -> General -> Your apps -> SDK setup and configuration). Use um
+        // projeto Firebase NOVO e separado do projeto do trabalho.
+        // =====================================================================
+        const firebaseConfig = {
+            apiKey: "COLE_AQUI",
+            authDomain: "COLE_AQUI.firebaseapp.com",
+            projectId: "COLE_AQUI",
+            storageBucket: "COLE_AQUI.firebasestorage.app",
+            messagingSenderId: "COLE_AQUI",
+            appId: "COLE_AQUI"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+
+        let currentUser = null;
+        let entries = [];
+        let searchTerm = '';
+        let draftId = null;      // id do registro sendo criado/editado no modal
+        let currentPhotos = [];  // urls já enviadas para o registro aberto no modal
+        let isEditing = false;
+
+        // SEGURANÇA: escapa qualquer valor antes de inseri-lo via innerHTML,
+        // para que texto digitado (nome do restaurante, prato, observações etc.)
+        // nunca seja interpretado como HTML/JS.
+        const escapeHtml = (value) => {
+            if (value === null || value === undefined) return '';
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        };
+
+        const loginScreen = document.getElementById('login-screen');
+        const appDiv = document.getElementById('app');
+        const btnOpenAdd = document.getElementById('btn-open-add');
+        const cardsList = document.getElementById('cards-list');
+        const emptyState = document.getElementById('empty-state');
+        const permissionError = document.getElementById('permission-error');
+        let unsubscribeSnapshot = null;
+
+        // ===================== AUTENTICAÇÃO =====================
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                loginScreen.classList.add('hidden');
+                appDiv.classList.remove('hidden');
+                btnOpenAdd.classList.remove('hidden');
+                loadEntries();
+            } else {
+                currentUser = null;
+                if (unsubscribeSnapshot) { unsubscribeSnapshot(); unsubscribeSnapshot = null; }
+                loginScreen.classList.remove('hidden');
+                appDiv.classList.add('hidden');
+                btnOpenAdd.classList.add('hidden');
+            }
+        });
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            const errorDiv = document.getElementById('auth-error');
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                errorDiv.classList.add('hidden');
+            } catch (error) {
+                if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+                    try {
+                        await createUserWithEmailAndPassword(auth, email, password);
+                        errorDiv.classList.add('hidden');
+                    } catch (createError) {
+                        errorDiv.innerText = "Erro ao criar conta: " + createError.message;
+                        errorDiv.classList.remove('hidden');
+                    }
+                } else {
+                    errorDiv.innerText = "Erro no login: " + error.message;
+                    errorDiv.classList.remove('hidden');
+                }
+            }
+        });
+
+        document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
+
+        // ===================== CARREGAR / LISTAR =====================
+        const loadEntries = () => {
+            permissionError.classList.add('hidden');
+            unsubscribeSnapshot = onSnapshot(collection(db, "avaliacoes"), (snapshot) => {
+                entries = [];
+                snapshot.forEach((d) => entries.push({ id: d.id, ...d.data() }));
+                renderCards();
+            }, (error) => {
+                console.error("Erro ao carregar registros:", error);
+                if (error.code === 'permission-denied') {
+                    permissionError.classList.remove('hidden');
+                    cardsList.innerHTML = '';
+                    emptyState.classList.add('hidden');
+                }
+            });
+        };
+
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            searchTerm = e.target.value.trim().toLowerCase();
+            renderCards();
+        });
+
+        const renderCards = () => {
+            let filtered = entries.filter(en => !searchTerm || (en.restaurante || '').toLowerCase().includes(searchTerm));
+            filtered.sort((a, b) => (b.data || '').localeCompare(a.data || '') || (b.createdAt || '').localeCompare(a.createdAt || ''));
+
+            cardsList.innerHTML = '';
+            emptyState.classList.toggle('hidden', entries.length > 0);
+
+            filtered.forEach(en => {
+                const pratos = Array.isArray(en.pratos) ? en.pratos : [];
+                const badges = pratos.slice(0, 4).map(p =>
+                    `<span class="bg-slate-900 border border-slate-700 text-slate-300 text-[11px] px-2 py-1 rounded-full">${escapeHtml(p.nome) || 'Prato'}${p.nota ? ' · ' + escapeHtml(p.nota) : ''}</span>`
+                ).join(' ');
+                const extra = pratos.length > 4 ? `<span class="text-[11px] text-slate-500">+${pratos.length - 4}</span>` : '';
+                const thumb = (Array.isArray(en.fotos) && en.fotos[0])
+                    ? `<img src="${escapeHtml(en.fotos[0])}" class="w-16 h-16 rounded-lg object-cover border border-slate-700 flex-shrink-0">`
+                    : `<div class="w-16 h-16 rounded-lg bg-slate-900 border border-slate-700 flex items-center justify-center text-slate-600 flex-shrink-0"><i class="fas fa-utensils"></i></div>`;
+                const dataFmt = en.data ? formatDateBR(en.data) : '';
+
+                const card = document.createElement('div');
+                card.className = "bg-slate-800 p-3 rounded-xl border border-slate-700 flex gap-3 cursor-pointer hover:border-amber-600 transition";
+                card.onclick = () => openEditModal(en.id);
+                card.innerHTML = `
+                    ${thumb}
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-start gap-2">
+                            <div class="font-bold text-white truncate">${escapeHtml(en.restaurante) || 'Sem nome'}</div>
+                            ${dataFmt ? `<div class="text-[11px] text-slate-500 whitespace-nowrap">${escapeHtml(dataFmt)}</div>` : ''}
+                        </div>
+                        ${en.endereco ? `<div class="text-xs text-slate-500 truncate mt-0.5"><i class="fas fa-location-dot mr-1 opacity-60"></i>${escapeHtml(en.endereco)}</div>` : ''}
+                        <div class="flex flex-wrap gap-1 mt-2">${badges}${extra}</div>
+                    </div>
+                `;
+                cardsList.appendChild(card);
+            });
+        };
+
+        const formatDateBR = (isoDate) => {
+            const parts = isoDate.split('-');
+            if (parts.length !== 3) return isoDate;
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        };
+
+        // ===================== PARSER DE TEXTO (sem IA, baseado em padrão fixo) ====
+        const parseText = (text) => {
+            const lines = text.split('\n');
+            const result = { restaurante: '', data: '', endereco: '', obs: '', pratos: [] };
+            let obsStarted = false;
+            const obsLines = [];
+
+            for (const rawLine of lines) {
+                const line = rawLine.trim();
+                if (obsStarted) { obsLines.push(rawLine); continue; }
+
+                if (/^restaurante\s*:/i.test(line)) {
+                    result.restaurante = line.replace(/^restaurante\s*:/i, '').trim();
+                } else if (/^data\s*:/i.test(line)) {
+                    const raw = line.replace(/^data\s*:/i, '').trim();
+                    const m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+                    if (m) {
+                        let [, d, mo, y] = m;
+                        if (y.length === 2) y = '20' + y;
+                        result.data = `${y.padStart(4, '0')}-${mo.padStart(2, '0')}-${d.padStart(2, '0')}`;
+                    } else if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+                        result.data = raw;
+                    }
+                } else if (/^endere[cç]o\s*:/i.test(line)) {
+                    result.endereco = line.replace(/^endere[cç]o\s*:/i, '').trim();
+                } else if (/^prato\s*:/i.test(line)) {
+                    const raw = line.replace(/^prato\s*:/i, '').trim();
+                    const idx = raw.lastIndexOf(' - ');
+                    if (idx >= 0) {
+                        result.pratos.push({ nome: raw.slice(0, idx).trim(), nota: raw.slice(idx + 3).trim() });
+                    } else {
+                        result.pratos.push({ nome: raw, nota: '' });
+                    }
+                } else if (/^obs\s*:/i.test(line)) {
+                    obsStarted = true;
+                    obsLines.push(line.replace(/^obs\s*:/i, '').trim());
+                }
+            }
+            result.obs = obsLines.join('\n').trim();
+            return result;
+        };
+
+        document.getElementById('btn-parse').addEventListener('click', () => {
+            const text = document.getElementById('paste-text').value;
+            if (!text.trim()) return;
+            const parsed = parseText(text);
+            document.getElementById('f-restaurante').value = parsed.restaurante;
+            if (parsed.data) document.getElementById('f-data').value = parsed.data;
+            document.getElementById('f-endereco').value = parsed.endereco;
+            document.getElementById('f-obs').value = parsed.obs;
+            renderPratosRows(parsed.pratos.length ? parsed.pratos : [{ nome: '', nota: '' }]);
+        });
+
+        // ===================== LINHAS DE PRATOS (dinâmicas) =====================
+        const pratosList = document.getElementById('pratos-list');
+
+        const addPratoRow = (nome = '', nota = '') => {
+            const row = document.createElement('div');
+            row.className = 'flex gap-2 items-center prato-row';
+
+            const inputNome = document.createElement('input');
+            inputNome.type = 'text';
+            inputNome.placeholder = 'Nome do prato';
+            inputNome.maxLength = 150;
+            inputNome.value = nome;
+            inputNome.className = 'prato-nome flex-1 p-2 text-sm border border-slate-600 rounded-lg bg-slate-900 text-white focus:border-amber-500 outline-none transition';
+
+            const inputNota = document.createElement('input');
+            inputNota.type = 'text';
+            inputNota.placeholder = 'Nota';
+            inputNota.maxLength = 20;
+            inputNota.value = nota;
+            inputNota.className = 'prato-nota w-20 p-2 text-sm border border-slate-600 rounded-lg bg-slate-900 text-white focus:border-amber-500 outline-none transition';
+
+            const btnRemove = document.createElement('button');
+            btnRemove.type = 'button';
+            btnRemove.innerHTML = '<i class="fas fa-trash"></i>';
+            btnRemove.className = 'text-slate-600 hover:text-red-400 transition px-1';
+            btnRemove.onclick = () => row.remove();
+
+            row.appendChild(inputNome);
+            row.appendChild(inputNota);
+            row.appendChild(btnRemove);
+            pratosList.appendChild(row);
+        };
+
+        const renderPratosRows = (pratos) => {
+            pratosList.innerHTML = '';
+            (pratos.length ? pratos : [{ nome: '', nota: '' }]).forEach(p => addPratoRow(p.nome, p.nota));
+        };
+
+        document.getElementById('btn-add-prato').addEventListener('click', () => addPratoRow());
+
+        // ===================== FOTOS =====================
+        const fotosPreview = document.getElementById('fotos-preview');
+        const fotoStatus = document.getElementById('foto-status');
+
+        const resizeImage = (file, maxDim = 1600, quality = 0.82) => new Promise((resolve, reject) => {
+            const img = new Image();
+            const url = URL.createObjectURL(file);
+            img.onload = () => {
+                let { width, height } = img;
+                if (width > maxDim || height > maxDim) {
+                    const ratio = Math.min(maxDim / width, maxDim / height);
+                    width = Math.round(width * ratio);
+                    height = Math.round(height * ratio);
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                canvas.toBlob((blob) => {
+                    URL.revokeObjectURL(url);
+                    blob ? resolve(blob) : reject(new Error('Falha ao processar imagem'));
+                }, 'image/jpeg', quality);
+            };
+            img.onerror = reject;
+            img.src = url;
+        });
+
+        const renderFotosPreview = () => {
+            fotosPreview.innerHTML = '';
+            currentPhotos.forEach((url, idx) => {
+                const wrap = document.createElement('div');
+                wrap.className = 'relative';
+                const img = document.createElement('img');
+                img.src = url;
+                img.className = 'w-16 h-16 object-cover rounded-lg border border-slate-700';
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.innerHTML = '<i class="fas fa-xmark"></i>';
+                btn.className = 'absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-600 text-white text-[10px] flex items-center justify-center';
+                btn.onclick = () => removePhoto(idx);
+                wrap.appendChild(img);
+                wrap.appendChild(btn);
+                fotosPreview.appendChild(wrap);
+            });
+        };
+
+        const removePhoto = async (idx) => {
+            const url = currentPhotos[idx];
+            currentPhotos.splice(idx, 1);
+            renderFotosPreview();
+            try {
+                const path = decodeURIComponent(new URL(url).pathname.split('/o/')[1].split('?')[0]);
+                await deleteObject(ref(storage, path));
+            } catch (err) {
+                console.warn('Não foi possível remover a foto do Storage:', err);
+            }
+        };
+
+        document.getElementById('f-fotos').addEventListener('change', async (e) => {
+            const files = Array.from(e.target.files || []);
+            if (!files.length || !draftId) return;
+            fotoStatus.classList.remove('hidden');
+            for (const file of files) {
+                try {
+                    const blob = await resizeImage(file);
+                    const path = `fotos/${draftId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+                    const storageRef = ref(storage, path);
+                    await uploadBytes(storageRef, blob, { contentType: 'image/jpeg' });
+                    const url = await getDownloadURL(storageRef);
+                    currentPhotos.push(url);
+                    renderFotosPreview();
+                } catch (err) {
+                    console.error('Erro ao enviar foto:', err);
+                    alert('Não foi possível enviar uma das fotos.');
+                }
+            }
+            fotoStatus.classList.add('hidden');
+            e.target.value = '';
+        });
+
+        // ===================== MODAL: ABRIR / FECHAR =====================
+        const modal = document.getElementById('entry-modal');
+        const btnDelete = document.getElementById('btn-delete-entry');
+
+        const resetModalFields = () => {
+            document.getElementById('paste-text').value = '';
+            document.getElementById('f-restaurante').value = '';
+            document.getElementById('f-data').value = new Date().toISOString().slice(0, 10);
+            document.getElementById('f-endereco').value = '';
+            document.getElementById('f-obs').value = '';
+            currentPhotos = [];
+            renderFotosPreview();
+            renderPratosRows([{ nome: '', nota: '' }]);
+        };
+
+        window.openAddModal = () => {
+            isEditing = false;
+            draftId = doc(collection(db, "avaliacoes")).id;
+            resetModalFields();
+            document.getElementById('modal-title').innerText = 'Novo Registro';
+            btnDelete.classList.add('hidden');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        };
+        document.getElementById('btn-open-add').addEventListener('click', () => window.openAddModal());
+
+        window.openEditModal = (id) => {
+            const en = entries.find(e => e.id === id);
+            if (!en) return;
+            isEditing = true;
+            draftId = id;
+            document.getElementById('paste-text').value = '';
+            document.getElementById('f-restaurante').value = en.restaurante || '';
+            document.getElementById('f-data').value = en.data || '';
+            document.getElementById('f-endereco').value = en.endereco || '';
+            document.getElementById('f-obs').value = en.obs || '';
+            currentPhotos = Array.isArray(en.fotos) ? [...en.fotos] : [];
+            renderFotosPreview();
+            renderPratosRows(Array.isArray(en.pratos) && en.pratos.length ? en.pratos : [{ nome: '', nota: '' }]);
+            document.getElementById('modal-title').innerText = 'Editar Registro';
+            btnDelete.classList.remove('hidden');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        };
+
+        window.closeModal = () => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            draftId = null;
+        };
+
+        // ===================== SALVAR / EXCLUIR =====================
+        document.getElementById('btn-save-entry').addEventListener('click', async () => {
+            const restaurante = document.getElementById('f-restaurante').value.trim();
+            if (!restaurante) { alert('Preencha o nome do restaurante.'); return; }
+
+            const pratos = Array.from(document.querySelectorAll('#pratos-list .prato-row')).map(row => ({
+                nome: row.querySelector('.prato-nome').value.trim(),
+                nota: row.querySelector('.prato-nota').value.trim()
+            })).filter(p => p.nome || p.nota);
+
+            const data = {
+                restaurante,
+                data: document.getElementById('f-data').value || '',
+                endereco: document.getElementById('f-endereco').value.trim(),
+                obs: document.getElementById('f-obs').value.trim(),
+                pratos,
+                fotos: currentPhotos,
+                criadoPorEmail: currentUser.email
+            };
+
+            try {
+                if (isEditing) {
+                    await updateDoc(doc(db, "avaliacoes", draftId), data);
+                } else {
+                    await setDoc(doc(db, "avaliacoes", draftId), { ...data, createdAt: new Date().toISOString() });
+                }
+                closeModal();
+            } catch (err) {
+                console.error('Erro ao salvar:', err);
+                alert('Não foi possível salvar. Verifique sua conexão e as regras do Firestore.');
+            }
+        });
+
+        btnDelete.addEventListener('click', async () => {
+            if (!draftId || !confirm('Excluir este registro?')) return;
+            try {
+                await deleteDoc(doc(db, "avaliacoes", draftId));
+                closeModal();
+            } catch (err) {
+                console.error('Erro ao excluir:', err);
+                alert('Não foi possível excluir.');
+            }
+        });
+    </script>
+</body>
+</html>
