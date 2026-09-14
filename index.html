@@ -88,11 +88,10 @@
                     <textarea id="paste-text" rows="6" placeholder="Restaurante: Nome do restaurante
 Tipo: Japonesa
 Data: 20/09/2026
-Endereço: Rua Exemplo, 123
 Prato: Nome do prato - Nota
 Prato: Outro prato - Nota
 Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-stone-300 rounded-lg bg-stone-50 text-stone-800 focus:border-amber-500 outline-none transition font-mono"></textarea>
-                    <p class="text-[11px] text-stone-400 mt-1 leading-tight">Use uma linha para cada campo, começando com <span class="text-stone-500">Restaurante:</span>, <span class="text-stone-500">Tipo:</span>, <span class="text-stone-500">Data:</span>, <span class="text-stone-500">Endereço:</span>, <span class="text-stone-500">Prato:</span> (uma por prato, terminando com "- Nota") e <span class="text-stone-500">Obs:</span>.</p>
+                    <p class="text-[11px] text-stone-400 mt-1 leading-tight">Use uma linha para cada campo, começando com <span class="text-stone-500">Restaurante:</span>, <span class="text-stone-500">Tipo:</span>, <span class="text-stone-500">Data:</span>, <span class="text-stone-500">Prato:</span> (uma por prato, terminando com "- Nota") e <span class="text-stone-500">Obs:</span>.</p>
                     <button type="button" id="btn-parse" class="mt-2 w-full bg-stone-100 hover:bg-stone-200 text-amber-600 text-sm font-semibold py-2 rounded-lg transition"><i class="fas fa-wand-magic-sparkles mr-2"></i>Preencher campos com esse texto</button>
                 </div>
 
@@ -107,15 +106,9 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-sto
                             <option value="">Selecione...</option>
                         </select>
                     </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-semibold text-stone-500 mb-1 uppercase tracking-wider">Data</label>
-                            <input type="date" id="f-data" class="w-full p-2.5 text-sm border border-stone-300 rounded-lg bg-stone-50 text-stone-800 focus:border-amber-500 outline-none transition">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-stone-500 mb-1 uppercase tracking-wider">Endereço</label>
-                            <input type="text" id="f-endereco" maxlength="200" class="w-full p-2.5 text-sm border border-stone-300 rounded-lg bg-stone-50 text-stone-800 focus:border-amber-500 outline-none transition">
-                        </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-stone-500 mb-1 uppercase tracking-wider">Data</label>
+                        <input type="date" id="f-data" class="w-full p-2.5 text-sm border border-stone-300 rounded-lg bg-stone-50 text-stone-800 focus:border-amber-500 outline-none transition">
                     </div>
 
                     <div>
@@ -353,7 +346,6 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-sto
                             ${dataFmt ? `<div class="text-[11px] text-stone-400 whitespace-nowrap">${escapeHtml(dataFmt)}</div>` : ''}
                         </div>
                         ${en.tipo ? `<span class="inline-block text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full mt-1">${escapeHtml(en.tipo)}</span>` : ''}
-                        ${en.endereco ? `<div class="text-xs text-stone-400 truncate mt-1"><i class="fas fa-location-dot mr-1 opacity-60"></i>${escapeHtml(en.endereco)}</div>` : ''}
                         <div class="flex flex-wrap gap-1 mt-2">${badges}${extra}</div>
                     </div>
                 `;
@@ -370,7 +362,7 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-sto
         // ===================== PARSER DE TEXTO (sem IA, baseado em padrão fixo) ====
         const parseText = (text) => {
             const lines = text.split('\n');
-            const result = { restaurante: '', tipo: '', data: '', endereco: '', obs: '', pratos: [] };
+            const result = { restaurante: '', tipo: '', data: '', obs: '', pratos: [] };
             let obsStarted = false;
             const obsLines = [];
 
@@ -394,8 +386,6 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-sto
                     } else if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
                         result.data = raw;
                     }
-                } else if (/^endere[cç]o\s*:/i.test(line)) {
-                    result.endereco = line.replace(/^endere[cç]o\s*:/i, '').trim();
                 } else if (/^prato\s*:/i.test(line)) {
                     const raw = line.replace(/^prato\s*:/i, '').trim();
                     const idx = raw.lastIndexOf(' - ');
@@ -420,7 +410,6 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-sto
             document.getElementById('f-restaurante').value = parsed.restaurante;
             document.getElementById('f-tipo').value = parsed.tipo || '';
             if (parsed.data) document.getElementById('f-data').value = parsed.data;
-            document.getElementById('f-endereco').value = parsed.endereco;
             document.getElementById('f-obs').value = parsed.obs;
             renderPratosRows(parsed.pratos.length ? parsed.pratos : [{ nome: '', nota: '' }]);
         });
@@ -490,7 +479,6 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-sto
             document.getElementById('f-restaurante').value = '';
             document.getElementById('f-tipo').value = '';
             document.getElementById('f-data').value = new Date().toISOString().slice(0, 10);
-            document.getElementById('f-endereco').value = '';
             document.getElementById('f-obs').value = '';
             renderPratosRows([{ nome: '', nota: '' }]);
         };
@@ -515,7 +503,6 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-sto
             document.getElementById('f-restaurante').value = en.restaurante || '';
             document.getElementById('f-tipo').value = en.tipo || '';
             document.getElementById('f-data').value = en.data || '';
-            document.getElementById('f-endereco').value = en.endereco || '';
             document.getElementById('f-obs').value = en.obs || '';
             renderPratosRows(Array.isArray(en.pratos) && en.pratos.length ? en.pratos : [{ nome: '', nota: '' }]);
             document.getElementById('modal-title').innerText = 'Editar Registro';
@@ -544,7 +531,6 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-sto
                 restaurante,
                 tipo: document.getElementById('f-tipo').value || '',
                 data: document.getElementById('f-data').value || '',
-                endereco: document.getElementById('f-endereco').value.trim(),
                 obs: document.getElementById('f-obs').value.trim(),
                 pratos,
                 criadoPorEmail: currentUser.email
