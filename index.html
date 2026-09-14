@@ -58,11 +58,26 @@
         <header class="sticky top-0 z-30 bg-rose-50/95 backdrop-blur-sm border-b border-amber-200/60 px-4 pt-4 pb-3">
             <div class="flex items-center justify-between mb-3">
                 <h1 class="font-display text-lg font-bold text-rose-700 flex items-center"><span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-rose-500 text-white text-xs ring-2 ring-amber-300/80 mr-2"><i class="fas fa-utensils"></i></span>MajuChef</h1>
-                <button id="btn-logout" class="text-stone-400 hover:text-rose-600 text-sm transition"><i class="fas fa-sign-out-alt"></i></button>
+                <div class="flex items-center gap-3">
+                    <button id="btn-export" title="Exportar backup" class="text-stone-400 hover:text-rose-600 text-sm transition"><i class="fas fa-download"></i></button>
+                    <button id="btn-logout" title="Sair" class="text-stone-400 hover:text-rose-600 text-sm transition"><i class="fas fa-sign-out-alt"></i></button>
+                </div>
             </div>
             <div class="relative">
                 <i class="fas fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-sm"></i>
                 <input type="text" id="search-input" placeholder="Buscar por restaurante..." class="w-full pl-9 p-2.5 text-sm rounded-lg bg-white border border-rose-200 text-stone-800 focus:border-rose-400 outline-none transition">
+            </div>
+            <div class="flex items-center gap-2 mt-2">
+                <select id="sort-select" class="flex-1 p-2 text-xs rounded-lg bg-white border border-rose-200 text-stone-600 focus:border-rose-400 outline-none transition">
+                    <option value="recentes">Mais recentes</option>
+                    <option value="antigos">Mais antigos</option>
+                    <option value="melhor-nota">Melhor nota</option>
+                    <option value="pior-nota">Pior nota</option>
+                    <option value="az">Nome (A-Z)</option>
+                </select>
+                <button type="button" id="btn-toggle-favoritos" title="Somente favoritos" class="flex-shrink-0 w-9 h-9 rounded-lg bg-white border border-rose-200 text-stone-400 hover:text-rose-500 hover:border-rose-300 transition flex items-center justify-center">
+                    <i class="fas fa-heart"></i>
+                </button>
             </div>
             <div id="filter-chips" class="hidden flex flex-wrap gap-2 mt-2"></div>
             <div id="nota-filter-chips" class="hidden flex flex-wrap gap-2 mt-2"></div>
@@ -122,6 +137,16 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                         <label class="block text-xs font-semibold text-stone-500 mb-1 uppercase tracking-wider">Data</label>
                         <input type="date" id="f-data" class="w-full p-2.5 text-sm border border-rose-200 rounded-lg bg-rose-50/50 text-stone-800 focus:border-rose-400 outline-none transition">
                     </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-stone-500 mb-1 uppercase tracking-wider">Faixa de preço</label>
+                        <select id="f-preco" class="w-full p-2.5 text-sm border border-rose-200 rounded-lg bg-rose-50/50 text-stone-800 focus:border-rose-400 outline-none transition">
+                            <option value="">Não informado</option>
+                            <option value="$">$ · Econômico</option>
+                            <option value="$$">$$ · Médio</option>
+                            <option value="$$$">$$$ · Caro</option>
+                            <option value="$$$$">$$$$ · Muito caro</option>
+                        </select>
+                    </div>
 
                     <div>
                         <div class="flex justify-between items-center mb-2">
@@ -135,6 +160,11 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                         <label class="block text-xs font-semibold text-stone-500 mb-1 uppercase tracking-wider">Observações</label>
                         <textarea id="f-obs" rows="3" class="w-full p-2.5 text-sm border border-rose-200 rounded-lg bg-rose-50/50 text-stone-800 focus:border-rose-400 outline-none transition"></textarea>
                     </div>
+
+                    <label class="flex items-center gap-2 text-sm text-stone-600 cursor-pointer select-none">
+                        <input type="checkbox" id="f-favorito" class="w-4 h-4 rounded border-rose-300 text-rose-500 focus:ring-rose-400">
+                        <span><i class="fas fa-heart text-rose-400 mr-1"></i>Marcar como favorito</span>
+                    </label>
 
                 </div>
             </div>
@@ -196,6 +226,8 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
         let searchTerm = '';
         let filterTipo = '';     // tipo de comida selecionado no filtro ('' = todos)
         let filterNota = '';     // faixa de nota selecionada no filtro: '' | 'ruim' | 'medio' | 'bom'
+        let filterFavoritos = false; // true = mostrar só os registros marcados como favorito
+        let sortBy = 'recentes';     // critério de ordenação da lista
         let draftId = null;      // id do registro sendo criado/editado no modal
         let isEditing = false;
         let profileRestaurantName = '';  // nome do restaurante aberto no perfil/histórico
@@ -266,7 +298,109 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
         const permissionError = document.getElementById('permission-error');
         const filterChipsEl = document.getElementById('filter-chips');
         const notaFilterChipsEl = document.getElementById('nota-filter-chips');
+        const sortSelect = document.getElementById('sort-select');
+        const btnToggleFavoritos = document.getElementById('btn-toggle-favoritos');
+        const btnExport = document.getElementById('btn-export');
         let unsubscribeSnapshot = null;
+
+        // Ordenação da lista de registros
+        const SORTERS = {
+            recentes: (a, b) => (b.data || '').localeCompare(a.data || '') || (b.createdAt || '').localeCompare(a.createdAt || ''),
+            antigos: (a, b) => (a.data || '').localeCompare(b.data || '') || (a.createdAt || '').localeCompare(b.createdAt || ''),
+            'melhor-nota': (a, b) => (getEntryAvgNota(b) ?? -1) - (getEntryAvgNota(a) ?? -1),
+            'pior-nota': (a, b) => (getEntryAvgNota(a) ?? 11) - (getEntryAvgNota(b) ?? 11),
+            az: (a, b) => (a.restaurante || '').localeCompare(b.restaurante || '', 'pt-BR')
+        };
+
+        sortSelect.addEventListener('change', (e) => {
+            sortBy = e.target.value;
+            renderCards();
+        });
+
+        // Alterna a UI do botão de favoritos entre ativo/inativo sem depender
+        // da ordem de geração das classes do Tailwind (sempre remove um
+        // conjunto completo de classes antes de adicionar o outro).
+        const updateFavoritosToggleUI = () => {
+            if (filterFavoritos) {
+                btnToggleFavoritos.classList.remove('bg-white', 'border-rose-200', 'text-stone-400');
+                btnToggleFavoritos.classList.add('bg-rose-500', 'border-rose-500', 'text-white');
+            } else {
+                btnToggleFavoritos.classList.remove('bg-rose-500', 'border-rose-500', 'text-white');
+                btnToggleFavoritos.classList.add('bg-white', 'border-rose-200', 'text-stone-400');
+            }
+        };
+
+        btnToggleFavoritos.addEventListener('click', () => {
+            filterFavoritos = !filterFavoritos;
+            updateFavoritosToggleUI();
+            renderCards();
+        });
+
+        // Marca/desmarca um registro como favorito direto pelo card, sem
+        // precisar abrir o modal de edição.
+        const toggleFavorito = async (id) => {
+            const en = entries.find(e => e.id === id);
+            if (!en) return;
+            try {
+                await updateDoc(doc(db, "avaliacoes", id), { favorito: !en.favorito });
+            } catch (err) {
+                console.error('Erro ao marcar favorito:', err);
+            }
+        };
+
+        // Monta um texto pronto de recomendação e usa o compartilhamento
+        // nativo do celular (se disponível) ou copia pra área de transferência.
+        const shareEntry = async (id) => {
+            const en = entries.find(e => e.id === id);
+            if (!en) return;
+            const pratos = Array.isArray(en.pratos) ? en.pratos : [];
+            const linhas = pratos.filter(p => p.nome).map(p => `- ${p.nome}${p.nota ? ' (nota ' + p.nota + ')' : ''}`);
+
+            let texto = `🍽️ ${en.restaurante || 'Restaurante'}`;
+            if (en.tipo) texto += ` · ${en.tipo}`;
+            if (en.preco) texto += ` · ${en.preco}`;
+            texto += '\n';
+            if (linhas.length) texto += '\n' + linhas.join('\n') + '\n';
+            if (en.obs) texto += `\n"${en.obs}"\n`;
+            texto += '\nRecomendado pelo MajuChef 💕';
+
+            if (navigator.share) {
+                try {
+                    await navigator.share({ title: en.restaurante || 'MajuChef', text: texto });
+                } catch (err) {
+                    // Usuário cancelou o compartilhamento; nada a fazer.
+                }
+            } else if (navigator.clipboard && navigator.clipboard.writeText) {
+                try {
+                    await navigator.clipboard.writeText(texto);
+                    alert('Texto copiado! Agora é só colar onde quiser mandar.');
+                } catch (err) {
+                    alert(texto);
+                }
+            } else {
+                alert(texto);
+            }
+        };
+
+        // Exporta todos os registros como um arquivo .json, pra servir de
+        // backup independente do Firebase.
+        btnExport.addEventListener('click', () => {
+            if (!entries.length) { alert('Ainda não há registros para exportar.'); return; }
+            const backup = {
+                exportadoEm: new Date().toISOString(),
+                totalRegistros: entries.length,
+                registros: entries
+            };
+            const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `majuchef-backup-${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        });
 
         // Popula o <select> de tipo de comida do modal a partir da lista única TIPOS_COMIDA
         const tipoSelect = document.getElementById('f-tipo');
@@ -351,7 +485,11 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                 searchTerm = '';
                 filterTipo = '';
                 filterNota = '';
+                filterFavoritos = false;
+                sortBy = 'recentes';
                 document.getElementById('search-input').value = '';
+                sortSelect.value = 'recentes';
+                updateFavoritosToggleUI();
                 cardsList.innerHTML = '';
                 filterChipsEl.innerHTML = '';
                 filterChipsEl.classList.add('hidden');
@@ -421,9 +559,10 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                 const matchesSearch = !searchTerm || (en.restaurante || '').toLowerCase().includes(searchTerm);
                 const matchesTipo = !filterTipo || en.tipo === filterTipo;
                 const matchesNota = !filterNota || getNotaBucket(getEntryAvgNota(en)) === filterNota;
-                return matchesSearch && matchesTipo && matchesNota;
+                const matchesFavorito = !filterFavoritos || en.favorito === true;
+                return matchesSearch && matchesTipo && matchesNota && matchesFavorito;
             });
-            filtered.sort((a, b) => (b.data || '').localeCompare(a.data || '') || (b.createdAt || '').localeCompare(a.createdAt || ''));
+            filtered.sort(SORTERS[sortBy] || SORTERS.recentes);
 
             cardsList.innerHTML = '';
             emptyState.classList.toggle('hidden', entries.length > 0);
@@ -460,11 +599,16 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                     <div class="flex-1 min-w-0">
                         <div class="flex justify-between items-start gap-2">
                             <div class="font-bold text-stone-800 truncate">${escapeHtml(en.restaurante) || 'Sem nome'}</div>
-                            ${dataFmt ? `<div class="text-[11px] text-stone-400 whitespace-nowrap">${escapeHtml(dataFmt)}</div>` : ''}
+                            <div class="flex items-center gap-2 flex-shrink-0">
+                                ${dataFmt ? `<span class="text-[11px] text-stone-400 whitespace-nowrap">${escapeHtml(dataFmt)}</span>` : ''}
+                                <button type="button" class="favorito-btn text-sm transition ${en.favorito ? 'text-rose-500' : 'text-stone-300 hover:text-rose-300'}" data-id="${escapeHtml(en.id)}" title="${en.favorito ? 'Remover dos favoritos' : 'Marcar como favorito'}"><i class="fas fa-heart"></i></button>
+                            </div>
                         </div>
                         <div class="flex flex-wrap items-center gap-1 mt-1">
                             ${en.tipo ? `<span class="inline-block text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">${escapeHtml(en.tipo)}</span>` : ''}
+                            ${en.preco ? `<span class="inline-block text-[10px] font-semibold text-stone-500 bg-stone-100 border border-stone-200 px-2 py-0.5 rounded-full">${escapeHtml(en.preco)}</span>` : ''}
                             ${visitCount > 1 ? `<button type="button" class="profile-btn text-[10px] text-rose-500 hover:text-rose-700 font-semibold inline-flex items-center gap-1" data-restaurante="${escapeHtml(en.restaurante)}"><i class="fas fa-clock-rotate-left"></i> ${visitCount} visitas · ver histórico</button>` : ''}
+                            <button type="button" class="share-btn text-[10px] text-stone-400 hover:text-rose-600 font-semibold inline-flex items-center gap-1" data-id="${escapeHtml(en.id)}" title="Compartilhar recomendação"><i class="fas fa-share-nodes"></i></button>
                         </div>
                         <div class="flex flex-wrap gap-1 mt-2">${badges}${extra}</div>
                     </div>
@@ -477,6 +621,18 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
         // histórico (dentro do card) abre o perfil do restaurante, sem também
         // abrir a edição da visita.
         cardsList.addEventListener('click', (e) => {
+            const favBtn = e.target.closest('.favorito-btn');
+            if (favBtn) {
+                e.stopPropagation();
+                toggleFavorito(favBtn.dataset.id);
+                return;
+            }
+            const shareBtn = e.target.closest('.share-btn');
+            if (shareBtn) {
+                e.stopPropagation();
+                shareEntry(shareBtn.dataset.id);
+                return;
+            }
             const profileBtn = e.target.closest('.profile-btn');
             if (profileBtn) {
                 e.stopPropagation();
@@ -708,7 +864,9 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             document.getElementById('f-restaurante').value = '';
             document.getElementById('f-tipo').value = '';
             document.getElementById('f-data').value = new Date().toISOString().slice(0, 10);
+            document.getElementById('f-preco').value = '';
             document.getElementById('f-obs').value = '';
+            document.getElementById('f-favorito').checked = false;
             renderPratosRows([{ nome: '', nota: '' }]);
         };
 
@@ -732,7 +890,9 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             document.getElementById('f-restaurante').value = en.restaurante || '';
             document.getElementById('f-tipo').value = en.tipo || '';
             document.getElementById('f-data').value = en.data || '';
+            document.getElementById('f-preco').value = en.preco || '';
             document.getElementById('f-obs').value = en.obs || '';
+            document.getElementById('f-favorito').checked = !!en.favorito;
             renderPratosRows(Array.isArray(en.pratos) && en.pratos.length ? en.pratos : [{ nome: '', nota: '' }]);
             document.getElementById('modal-title').innerText = 'Editar Registro';
             btnDelete.classList.remove('hidden');
@@ -760,8 +920,10 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                 restaurante,
                 tipo: document.getElementById('f-tipo').value || '',
                 data: document.getElementById('f-data').value || '',
+                preco: document.getElementById('f-preco').value || '',
                 obs: document.getElementById('f-obs').value.trim(),
                 pratos,
+                favorito: document.getElementById('f-favorito').checked,
                 criadoPorEmail: currentUser.email
             };
 
