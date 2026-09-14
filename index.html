@@ -17,6 +17,17 @@
     <link rel="icon" href="icon-180.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' };
+        // Aplica o tema salvo antes da página desenhar, pra não "piscar" claro e depois escuro.
+        (function () {
+            try {
+                var saved = localStorage.getItem('majuchef-theme');
+                var wantsDark = saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                if (wantsDark) document.documentElement.classList.add('dark');
+            } catch (e) {}
+        })();
+    </script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,56 +37,66 @@
         .font-display { font-family: 'Playfair Display', serif; }
     </style>
 </head>
-<body class="bg-rose-50 text-stone-600 font-sans min-h-screen">
+<body class="bg-rose-50 text-stone-600 font-sans min-h-screen dark:bg-stone-900 dark:text-stone-300">
 
     <!-- TELA DE LOGIN -->
-    <div id="login-screen" class="fixed inset-0 bg-gradient-to-b from-rose-50 to-rose-100/70 flex items-center justify-center z-50 backdrop-blur-sm p-4">
-        <div class="bg-white p-8 rounded-2xl shadow-xl shadow-rose-200/40 w-full max-w-sm border border-rose-100">
+    <div id="login-screen" class="fixed inset-0 bg-gradient-to-b from-rose-50 to-rose-100/70 dark:from-stone-950 dark:to-stone-900 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+        <div class="bg-white dark:bg-stone-800 p-8 rounded-2xl shadow-xl shadow-rose-200/40 dark:shadow-black/40 w-full max-w-sm border border-rose-100 dark:border-stone-700">
             <div class="flex flex-col items-center mb-1">
-                <span class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-rose-500 text-white text-lg shadow-md shadow-rose-300/50 ring-2 ring-amber-300 ring-offset-2 ring-offset-white mb-2"><i class="fas fa-utensils"></i></span>
-                <h2 class="font-display text-2xl font-bold text-rose-700">MajuChef</h2>
+                <span class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-rose-500 text-white text-lg shadow-md shadow-rose-300/50 ring-2 ring-amber-300 ring-offset-2 ring-offset-white dark:ring-offset-stone-800 mb-2"><i class="fas fa-utensils"></i></span>
+                <h2 class="font-display text-2xl font-bold text-rose-700 dark:text-rose-400">MajuChef</h2>
                 <div class="w-10 h-0.5 bg-gradient-to-r from-transparent via-amber-300 to-transparent mt-2"></div>
             </div>
-            <p class="text-center text-stone-400 text-sm mb-6 mt-3 italic">Onde comemos, o que pedimos, o que achamos.</p>
+            <p class="text-center text-stone-400 dark:text-stone-500 text-sm mb-6 mt-3 italic">Onde comemos, o que pedimos, o que achamos.</p>
             <form id="login-form" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-stone-500 mb-1">E-mail</label>
-                    <input type="email" id="auth-email" required autocomplete="email" class="w-full rounded-lg bg-rose-50/50 border-rose-200 text-stone-800 focus:border-rose-400 focus:ring-1 focus:ring-rose-400 p-2.5 outline-none transition">
+                    <label class="block text-sm font-medium text-stone-500 dark:text-stone-400 mb-1">E-mail</label>
+                    <input type="email" id="auth-email" required autocomplete="email" class="w-full rounded-lg bg-rose-50/50 dark:bg-stone-900/60 border-rose-200 dark:border-stone-600 text-stone-800 dark:text-stone-100 focus:border-rose-400 focus:ring-1 focus:ring-rose-400 p-2.5 outline-none transition">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-stone-500 mb-1">Senha</label>
-                    <input type="password" id="auth-password" required minlength="6" autocomplete="current-password" class="w-full rounded-lg bg-rose-50/50 border-rose-200 text-stone-800 focus:border-rose-400 focus:ring-1 focus:ring-rose-400 p-2.5 outline-none transition">
+                    <label class="block text-sm font-medium text-stone-500 dark:text-stone-400 mb-1">Senha</label>
+                    <input type="password" id="auth-password" required minlength="6" autocomplete="current-password" class="w-full rounded-lg bg-rose-50/50 dark:bg-stone-900/60 border-rose-200 dark:border-stone-600 text-stone-800 dark:text-stone-100 focus:border-rose-400 focus:ring-1 focus:ring-rose-400 p-2.5 outline-none transition">
                 </div>
-                <div class="text-red-500 text-sm hidden bg-red-50 p-2 rounded border border-red-200" id="auth-error"></div>
+                <div class="text-red-500 text-sm hidden bg-red-50 dark:bg-red-950/40 p-2 rounded border border-red-200 dark:border-red-800" id="auth-error"></div>
                 <button type="submit" class="w-full bg-rose-500 text-white font-bold p-3 rounded-lg hover:bg-rose-400 transition shadow-lg shadow-rose-200/50">Entrar</button>
-                <p class="text-xs text-stone-400 text-center mt-2">As contas de acesso são criadas manualmente no Firebase Console. Só quem estiver na lista de e-mails autorizados (regras do Firestore) consegue ver os registros.</p>
+                <p class="text-xs text-stone-400 dark:text-stone-500 text-center mt-2">As contas de acesso são criadas manualmente no Firebase Console. Só quem estiver na lista de e-mails autorizados (regras do Firestore) consegue ver os registros.</p>
             </form>
         </div>
     </div>
 
     <!-- APP PRINCIPAL -->
     <div id="app" class="hidden max-w-md mx-auto min-h-screen flex flex-col pb-24">
-        <header class="sticky top-0 z-30 bg-rose-50/95 backdrop-blur-sm border-b border-amber-200/60 px-4 pt-4 pb-3">
+        <header class="sticky top-0 z-30 bg-rose-50/95 dark:bg-stone-900/95 backdrop-blur-sm border-b border-amber-200/60 dark:border-stone-700 px-4 pt-4 pb-3">
             <div class="flex items-center justify-between mb-3">
-                <h1 class="font-display text-lg font-bold text-rose-700 flex items-center"><span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-rose-500 text-white text-xs ring-2 ring-amber-300/80 mr-2"><i class="fas fa-utensils"></i></span>MajuChef</h1>
-                <div class="flex items-center gap-3">
-                    <button id="btn-export" title="Exportar backup" class="text-stone-400 hover:text-rose-600 text-sm transition"><i class="fas fa-download"></i></button>
-                    <button id="btn-logout" title="Sair" class="text-stone-400 hover:text-rose-600 text-sm transition"><i class="fas fa-sign-out-alt"></i></button>
+                <h1 class="font-display text-lg font-bold text-rose-700 dark:text-rose-400 flex items-center"><span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-rose-500 text-white text-xs ring-2 ring-amber-300/80 mr-2"><i class="fas fa-utensils"></i></span>MajuChef</h1>
+                <div class="flex items-center gap-2.5">
+                    <button id="btn-stats" title="Resumo" class="text-stone-400 hover:text-rose-600 dark:text-stone-500 dark:hover:text-rose-400 text-sm transition"><i class="fas fa-chart-pie"></i></button>
+                    <button id="btn-export" title="Exportar backup" class="text-stone-400 hover:text-rose-600 dark:text-stone-500 dark:hover:text-rose-400 text-sm transition"><i class="fas fa-download"></i></button>
+                    <button id="btn-import" title="Importar backup" class="text-stone-400 hover:text-rose-600 dark:text-stone-500 dark:hover:text-rose-400 text-sm transition"><i class="fas fa-upload"></i></button>
+                    <button id="btn-theme-toggle" title="Alternar tema" class="text-stone-400 hover:text-rose-600 dark:text-stone-500 dark:hover:text-rose-400 text-sm transition"><i id="theme-toggle-icon" class="fas fa-moon"></i></button>
+                    <button id="btn-logout" title="Sair" class="text-stone-400 hover:text-rose-600 dark:text-stone-500 dark:hover:text-rose-400 text-sm transition"><i class="fas fa-sign-out-alt"></i></button>
                 </div>
             </div>
-            <div class="relative">
-                <i class="fas fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-sm"></i>
-                <input type="text" id="search-input" placeholder="Buscar por restaurante..." class="w-full pl-9 p-2.5 text-sm rounded-lg bg-white border border-rose-200 text-stone-800 focus:border-rose-400 outline-none transition">
+            <input type="file" id="import-file-input" accept="application/json" class="hidden">
+
+            <div class="flex gap-2 mb-3">
+                <button type="button" id="tab-visitados" class="tab-btn flex-1 py-2 rounded-lg text-sm font-semibold transition"></button>
+                <button type="button" id="tab-desejos" class="tab-btn flex-1 py-2 rounded-lg text-sm font-semibold transition"></button>
             </div>
-            <div class="flex items-center gap-2 mt-2">
-                <select id="sort-select" class="flex-1 p-2 text-xs rounded-lg bg-white border border-rose-200 text-stone-600 focus:border-rose-400 outline-none transition">
+
+            <div class="relative">
+                <i class="fas fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 dark:text-stone-500 text-sm"></i>
+                <input type="text" id="search-input" placeholder="Buscar por restaurante, prato, tag ou observação..." class="w-full pl-9 p-2.5 text-sm rounded-lg bg-white dark:bg-stone-800 border border-rose-200 dark:border-stone-600 text-stone-800 dark:text-stone-100 focus:border-rose-400 outline-none transition">
+            </div>
+            <div id="sort-row" class="flex items-center gap-2 mt-2">
+                <select id="sort-select" class="flex-1 p-2 text-xs rounded-lg bg-white dark:bg-stone-800 border border-rose-200 dark:border-stone-600 text-stone-600 dark:text-stone-300 focus:border-rose-400 outline-none transition">
                     <option value="recentes">Mais recentes</option>
                     <option value="antigos">Mais antigos</option>
                     <option value="melhor-nota">Melhor nota</option>
                     <option value="pior-nota">Pior nota</option>
                     <option value="az">Nome (A-Z)</option>
                 </select>
-                <button type="button" id="btn-toggle-favoritos" title="Somente favoritos" class="flex-shrink-0 w-9 h-9 rounded-lg bg-white border border-rose-200 text-stone-400 hover:text-rose-500 hover:border-rose-300 transition flex items-center justify-center">
+                <button type="button" id="btn-toggle-favoritos" title="Somente favoritos" class="flex-shrink-0 w-9 h-9 rounded-lg transition flex items-center justify-center">
                     <i class="fas fa-heart"></i>
                 </button>
             </div>
@@ -84,62 +105,71 @@
         </header>
 
         <main class="flex-1 px-4 pt-4">
-            <div id="empty-state" class="hidden text-center p-10 text-stone-400 bg-rose-50/70 rounded-xl border border-dashed border-amber-300/50">
+            <div id="empty-state" class="hidden text-center p-10 text-stone-400 dark:text-stone-500 bg-rose-50/70 dark:bg-stone-800/50 rounded-xl border border-dashed border-amber-300/50 dark:border-amber-700/40">
                 Nenhum restaurante registrado ainda. Toque no + para adicionar o primeiro.
             </div>
-            <div id="permission-error" class="hidden text-center p-6 text-amber-600 bg-amber-50 rounded-xl border border-amber-300 text-sm">
+            <div id="permission-error" class="hidden text-center p-6 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 rounded-xl border border-amber-300 dark:border-amber-700 text-sm">
                 Este e-mail não tem permissão para ver esses registros. Confira se ele foi adicionado na lista de e-mails autorizados nas regras do Firestore.
             </div>
             <div id="cards-list" class="space-y-3"></div>
+
+            <div id="wishlist-empty-state" class="hidden text-center p-10 text-stone-400 dark:text-stone-500 bg-rose-50/70 dark:bg-stone-800/50 rounded-xl border border-dashed border-amber-300/50 dark:border-amber-700/40">
+                Nenhum restaurante na lista de desejos ainda. Toque no + para adicionar um lugar que vocês querem experimentar.
+            </div>
+            <div id="wishlist-permission-error" class="hidden text-center p-6 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 rounded-xl border border-amber-300 dark:border-amber-700 text-sm">
+                Este e-mail não tem permissão para ver a lista de desejos. Falta adicionar uma regra pra coleção "desejos" no Firestore — veja a mensagem que te mandei com o passo a passo.
+            </div>
+            <div id="wishlist-list" class="hidden space-y-3"></div>
         </main>
     </div>
 
     <!-- BOTÃO FLUTUANTE DE ADICIONAR -->
-    <button id="btn-open-add" class="hidden fixed bottom-6 right-6 z-30 w-14 h-14 rounded-full bg-rose-500 hover:bg-rose-400 text-white text-xl shadow-lg shadow-rose-300/50 ring-2 ring-amber-300 ring-offset-2 ring-offset-rose-50 flex items-center justify-center transition">
+    <button id="btn-open-add" class="hidden fixed bottom-6 right-6 z-30 w-14 h-14 rounded-full bg-rose-500 hover:bg-rose-400 text-white text-xl shadow-lg shadow-rose-300/50 ring-2 ring-amber-300 ring-offset-2 ring-offset-rose-50 dark:ring-offset-stone-900 flex items-center justify-center transition">
         <i class="fas fa-plus"></i>
     </button>
 
     <!-- MODAL DE ADICIONAR / EDITAR -->
     <div id="entry-modal" class="fixed inset-0 bg-stone-900/30 backdrop-blur-sm hidden items-center justify-center z-50 p-0 sm:p-4">
-        <div class="bg-white sm:rounded-2xl shadow-2xl w-full sm:max-w-lg h-full sm:h-auto sm:max-h-[92vh] flex flex-col border-0 sm:border border-rose-100 overflow-hidden">
+        <div class="bg-white dark:bg-stone-800 sm:rounded-2xl shadow-2xl w-full sm:max-w-lg h-full sm:h-auto sm:max-h-[92vh] flex flex-col border-0 sm:border border-rose-100 dark:border-stone-700 overflow-hidden">
 
-            <div class="bg-rose-50 p-4 border-b border-rose-100 flex justify-between items-center">
-                <h2 id="modal-title" class="font-display text-lg font-bold text-rose-700">Novo Registro</h2>
-                <button onclick="closeModal()" class="text-stone-400 hover:text-rose-600 text-2xl leading-none transition">&times;</button>
+            <div class="bg-rose-50 dark:bg-stone-800 p-4 border-b border-rose-100 dark:border-stone-700 flex justify-between items-center">
+                <h2 id="modal-title" class="font-display text-lg font-bold text-rose-700 dark:text-rose-400">Novo Registro</h2>
+                <button onclick="closeModal()" class="text-stone-400 hover:text-rose-600 dark:text-stone-500 dark:hover:text-rose-400 text-2xl leading-none transition">&times;</button>
             </div>
 
             <div class="flex-1 overflow-y-auto p-5 space-y-5">
 
                 <div>
-                    <label class="block text-xs font-semibold text-stone-500 mb-1 uppercase tracking-wider">Cole um texto (opcional)</label>
+                    <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1 uppercase tracking-wider">Cole um texto (opcional)</label>
                     <textarea id="paste-text" rows="6" placeholder="Restaurante: Nome do restaurante
 Tipo: Japonesa
 Data: 20/09/2026
 Prato: Nome do prato - Nota (1 a 10)
 Prato: Outro prato - Nota (1 a 10)
-Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-rose-200 rounded-lg bg-rose-50/50 text-stone-800 focus:border-rose-400 outline-none transition font-mono"></textarea>
-                    <p class="text-[11px] text-stone-400 mt-1 leading-tight">Use uma linha para cada campo, começando com <span class="text-stone-500">Restaurante:</span>, <span class="text-stone-500">Tipo:</span>, <span class="text-stone-500">Data:</span>, <span class="text-stone-500">Prato:</span> (uma por prato, terminando com "- Nota", de 1 a 10) e <span class="text-stone-500">Obs:</span>. Notas fora de 1 a 10 ficam em branco pra você selecionar na mão.</p>
-                    <button type="button" id="btn-parse" class="mt-2 w-full bg-rose-100/60 hover:bg-rose-100 text-rose-600 text-sm font-semibold py-2 rounded-lg transition"><i class="fas fa-wand-magic-sparkles mr-2"></i>Preencher campos com esse texto</button>
+Tags: romântico, leva pet (opcional)
+Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-rose-200 dark:border-stone-600 rounded-lg bg-rose-50/50 dark:bg-stone-900/60 text-stone-800 dark:text-stone-100 focus:border-rose-400 outline-none transition font-mono"></textarea>
+                    <p class="text-[11px] text-stone-400 dark:text-stone-500 mt-1 leading-tight">Use uma linha para cada campo, começando com <span class="text-stone-500 dark:text-stone-400">Restaurante:</span>, <span class="text-stone-500 dark:text-stone-400">Tipo:</span>, <span class="text-stone-500 dark:text-stone-400">Data:</span>, <span class="text-stone-500 dark:text-stone-400">Prato:</span> (uma por prato, terminando com "- Nota", de 1 a 10), <span class="text-stone-500 dark:text-stone-400">Tags:</span> e <span class="text-stone-500 dark:text-stone-400">Obs:</span>. Notas fora de 1 a 10 ficam em branco pra você selecionar na mão.</p>
+                    <button type="button" id="btn-parse" class="mt-2 w-full bg-rose-100/60 dark:bg-stone-700 hover:bg-rose-100 dark:hover:bg-stone-600 text-rose-600 dark:text-rose-400 text-sm font-semibold py-2 rounded-lg transition"><i class="fas fa-wand-magic-sparkles mr-2"></i>Preencher campos com esse texto</button>
                 </div>
 
-                <div class="border-t border-rose-100 pt-4 space-y-4">
+                <div class="border-t border-rose-100 dark:border-stone-700 pt-4 space-y-4">
                     <div>
-                        <label class="block text-xs font-semibold text-stone-500 mb-1 uppercase tracking-wider">Restaurante</label>
-                        <input type="text" id="f-restaurante" maxlength="150" required class="w-full p-2.5 text-sm border border-rose-200 rounded-lg bg-rose-50/50 text-stone-800 focus:border-rose-400 outline-none transition">
+                        <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1 uppercase tracking-wider">Restaurante</label>
+                        <input type="text" id="f-restaurante" maxlength="150" required class="w-full p-2.5 text-sm border border-rose-200 dark:border-stone-600 rounded-lg bg-rose-50/50 dark:bg-stone-900/60 text-stone-800 dark:text-stone-100 focus:border-rose-400 outline-none transition">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-stone-500 mb-1 uppercase tracking-wider">Tipo de comida</label>
-                        <select id="f-tipo" class="w-full p-2.5 text-sm border border-rose-200 rounded-lg bg-rose-50/50 text-stone-800 focus:border-rose-400 outline-none transition">
+                        <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1 uppercase tracking-wider">Tipo de comida</label>
+                        <select id="f-tipo" class="w-full p-2.5 text-sm border border-rose-200 dark:border-stone-600 rounded-lg bg-rose-50/50 dark:bg-stone-900/60 text-stone-800 dark:text-stone-100 focus:border-rose-400 outline-none transition">
                             <option value="">Selecione...</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-stone-500 mb-1 uppercase tracking-wider">Data</label>
-                        <input type="date" id="f-data" class="w-full p-2.5 text-sm border border-rose-200 rounded-lg bg-rose-50/50 text-stone-800 focus:border-rose-400 outline-none transition">
+                        <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1 uppercase tracking-wider">Data</label>
+                        <input type="date" id="f-data" class="w-full p-2.5 text-sm border border-rose-200 dark:border-stone-600 rounded-lg bg-rose-50/50 dark:bg-stone-900/60 text-stone-800 dark:text-stone-100 focus:border-rose-400 outline-none transition">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-stone-500 mb-1 uppercase tracking-wider">Faixa de preço</label>
-                        <select id="f-preco" class="w-full p-2.5 text-sm border border-rose-200 rounded-lg bg-rose-50/50 text-stone-800 focus:border-rose-400 outline-none transition">
+                        <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1 uppercase tracking-wider">Faixa de preço</label>
+                        <select id="f-preco" class="w-full p-2.5 text-sm border border-rose-200 dark:border-stone-600 rounded-lg bg-rose-50/50 dark:bg-stone-900/60 text-stone-800 dark:text-stone-100 focus:border-rose-400 outline-none transition">
                             <option value="">Não informado</option>
                             <option value="$">$ · Econômico</option>
                             <option value="$$">$$ · Médio</option>
@@ -150,18 +180,24 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
 
                     <div>
                         <div class="flex justify-between items-center mb-2">
-                            <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wider">Pratos e notas</label>
-                            <button type="button" id="btn-add-prato" class="text-rose-600 hover:text-rose-700 text-xs transition"><i class="fas fa-plus"></i> Adicionar prato</button>
+                            <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider">Pratos e notas</label>
+                            <button type="button" id="btn-add-prato" class="text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 text-xs transition"><i class="fas fa-plus"></i> Adicionar prato</button>
                         </div>
                         <div id="pratos-list" class="space-y-2"></div>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-stone-500 mb-1 uppercase tracking-wider">Observações</label>
-                        <textarea id="f-obs" rows="3" class="w-full p-2.5 text-sm border border-rose-200 rounded-lg bg-rose-50/50 text-stone-800 focus:border-rose-400 outline-none transition"></textarea>
+                        <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1 uppercase tracking-wider">Tags (opcional)</label>
+                        <input type="text" id="f-tags" placeholder="ex: romântico, leva pet, grupo grande" class="w-full p-2.5 text-sm border border-rose-200 dark:border-stone-600 rounded-lg bg-rose-50/50 dark:bg-stone-900/60 text-stone-800 dark:text-stone-100 focus:border-rose-400 outline-none transition">
+                        <p class="text-[11px] text-stone-400 dark:text-stone-500 mt-1">Separe por vírgula.</p>
                     </div>
 
-                    <label class="flex items-center gap-2 text-sm text-stone-600 cursor-pointer select-none">
+                    <div>
+                        <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1 uppercase tracking-wider">Observações</label>
+                        <textarea id="f-obs" rows="3" class="w-full p-2.5 text-sm border border-rose-200 dark:border-stone-600 rounded-lg bg-rose-50/50 dark:bg-stone-900/60 text-stone-800 dark:text-stone-100 focus:border-rose-400 outline-none transition"></textarea>
+                    </div>
+
+                    <label class="flex items-center gap-2 text-sm text-stone-600 dark:text-stone-300 cursor-pointer select-none">
                         <input type="checkbox" id="f-favorito" class="w-4 h-4 rounded border-rose-300 text-rose-500 focus:ring-rose-400">
                         <span><i class="fas fa-heart text-rose-400 mr-1"></i>Marcar como favorito</span>
                     </label>
@@ -169,10 +205,10 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                 </div>
             </div>
 
-            <div class="p-4 border-t border-rose-100 bg-rose-50 flex justify-between gap-3">
-                <button id="btn-delete-entry" class="hidden px-4 py-2.5 text-red-500 font-semibold hover:bg-red-50 rounded-lg transition text-sm"><i class="fas fa-trash mr-1"></i> Excluir</button>
+            <div class="p-4 border-t border-rose-100 dark:border-stone-700 bg-rose-50 dark:bg-stone-800 flex justify-between gap-3">
+                <button id="btn-delete-entry" class="hidden px-4 py-2.5 text-red-500 dark:text-red-400 font-semibold hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition text-sm"><i class="fas fa-trash mr-1"></i> Excluir</button>
                 <div class="flex gap-3 ml-auto">
-                    <button onclick="closeModal()" class="px-4 py-2.5 text-stone-600 font-semibold hover:bg-rose-100 rounded-lg transition text-sm">Cancelar</button>
+                    <button onclick="closeModal()" class="px-4 py-2.5 text-stone-600 dark:text-stone-300 font-semibold hover:bg-rose-100 dark:hover:bg-stone-700 rounded-lg transition text-sm">Cancelar</button>
                     <button id="btn-save-entry" class="px-6 py-2.5 bg-rose-500 text-white font-bold rounded-lg shadow-lg shadow-rose-200/50 hover:bg-rose-400 transition text-sm">Salvar</button>
                 </div>
             </div>
@@ -181,21 +217,62 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
 
     <!-- MODAL DE PERFIL DO RESTAURANTE (histórico de visitas) -->
     <div id="profile-modal" class="fixed inset-0 bg-stone-900/30 backdrop-blur-sm hidden items-center justify-center z-50 p-0 sm:p-4">
-        <div class="bg-white sm:rounded-2xl shadow-2xl w-full sm:max-w-lg h-full sm:h-auto sm:max-h-[92vh] flex flex-col border-0 sm:border border-rose-100 overflow-hidden">
+        <div class="bg-white dark:bg-stone-800 sm:rounded-2xl shadow-2xl w-full sm:max-w-lg h-full sm:h-auto sm:max-h-[92vh] flex flex-col border-0 sm:border border-rose-100 dark:border-stone-700 overflow-hidden">
 
-            <div class="bg-rose-50 p-4 border-b border-rose-100 flex justify-between items-start gap-2">
+            <div class="bg-rose-50 dark:bg-stone-800 p-4 border-b border-rose-100 dark:border-stone-700 flex justify-between items-start gap-2">
                 <div class="min-w-0">
-                    <h2 id="profile-title" class="font-display text-lg font-bold text-rose-700 truncate">Restaurante</h2>
-                    <div id="profile-subtitle" class="text-xs text-stone-500 mt-1.5 flex flex-wrap items-center gap-1"></div>
+                    <h2 id="profile-title" class="font-display text-lg font-bold text-rose-700 dark:text-rose-400 truncate">Restaurante</h2>
+                    <div id="profile-subtitle" class="text-xs text-stone-500 dark:text-stone-400 mt-1.5 flex flex-wrap items-center gap-1"></div>
                 </div>
-                <button onclick="closeProfileModal()" class="text-stone-400 hover:text-rose-600 text-2xl leading-none transition flex-shrink-0">&times;</button>
+                <button onclick="closeProfileModal()" class="text-stone-400 hover:text-rose-600 dark:text-stone-500 dark:hover:text-rose-400 text-2xl leading-none transition flex-shrink-0">&times;</button>
             </div>
 
             <div id="profile-body" class="flex-1 overflow-y-auto p-5 space-y-2"></div>
 
-            <div class="p-4 border-t border-rose-100 bg-rose-50">
+            <div class="p-4 border-t border-rose-100 dark:border-stone-700 bg-rose-50 dark:bg-stone-800">
                 <button id="btn-profile-add-visit" type="button" class="w-full px-6 py-2.5 bg-rose-500 text-white font-bold rounded-lg shadow-lg shadow-rose-200/50 hover:bg-rose-400 transition text-sm"><i class="fas fa-plus mr-1"></i> Registrar nova visita aqui</button>
             </div>
+        </div>
+    </div>
+
+    <!-- MODAL DA LISTA DE DESEJOS (adicionar/editar um restaurante que quer visitar) -->
+    <div id="wishlist-modal" class="fixed inset-0 bg-stone-900/30 backdrop-blur-sm hidden items-center justify-center z-50 p-0 sm:p-4">
+        <div class="bg-white dark:bg-stone-800 sm:rounded-2xl shadow-2xl w-full sm:max-w-lg h-full sm:h-auto sm:max-h-[92vh] flex flex-col border-0 sm:border border-rose-100 dark:border-stone-700 overflow-hidden">
+
+            <div class="bg-rose-50 dark:bg-stone-800 p-4 border-b border-rose-100 dark:border-stone-700 flex justify-between items-center">
+                <h2 id="wishlist-modal-title" class="font-display text-lg font-bold text-rose-700 dark:text-rose-400">Quero visitar</h2>
+                <button onclick="closeWishlistModal()" class="text-stone-400 hover:text-rose-600 dark:text-stone-500 dark:hover:text-rose-400 text-2xl leading-none transition">&times;</button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-5 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1 uppercase tracking-wider">Restaurante</label>
+                    <input type="text" id="w-nome" maxlength="150" required class="w-full p-2.5 text-sm border border-rose-200 dark:border-stone-600 rounded-lg bg-rose-50/50 dark:bg-stone-900/60 text-stone-800 dark:text-stone-100 focus:border-rose-400 outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1 uppercase tracking-wider">Por que quer ir? (opcional)</label>
+                    <textarea id="w-motivo" rows="3" placeholder="ex: viram no Instagram, recomendação de alguém..." class="w-full p-2.5 text-sm border border-rose-200 dark:border-stone-600 rounded-lg bg-rose-50/50 dark:bg-stone-900/60 text-stone-800 dark:text-stone-100 focus:border-rose-400 outline-none transition"></textarea>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-rose-100 dark:border-stone-700 bg-rose-50 dark:bg-stone-800 flex justify-between gap-3">
+                <button id="btn-delete-wish" class="hidden px-4 py-2.5 text-red-500 dark:text-red-400 font-semibold hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition text-sm"><i class="fas fa-trash mr-1"></i> Excluir</button>
+                <div class="flex gap-3 ml-auto">
+                    <button onclick="closeWishlistModal()" class="px-4 py-2.5 text-stone-600 dark:text-stone-300 font-semibold hover:bg-rose-100 dark:hover:bg-stone-700 rounded-lg transition text-sm">Cancelar</button>
+                    <button id="btn-save-wish" class="px-6 py-2.5 bg-rose-500 text-white font-bold rounded-lg shadow-lg shadow-rose-200/50 hover:bg-rose-400 transition text-sm">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE ESTATÍSTICAS / RESUMO -->
+    <div id="stats-modal" class="fixed inset-0 bg-stone-900/30 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-stone-800 rounded-2xl shadow-2xl w-full max-w-sm border border-rose-100 dark:border-stone-700 overflow-hidden max-h-[85vh] flex flex-col">
+            <div class="bg-rose-50 dark:bg-stone-800 p-4 border-b border-rose-100 dark:border-stone-700 flex justify-between items-center">
+                <h2 class="font-display text-lg font-bold text-rose-700 dark:text-rose-400"><i class="fas fa-chart-pie mr-1 text-amber-500"></i> Resumo</h2>
+                <button onclick="closeStatsModal()" class="text-stone-400 hover:text-rose-600 dark:text-stone-500 dark:hover:text-rose-400 text-2xl leading-none transition">&times;</button>
+            </div>
+            <div id="stats-body" class="p-5 space-y-2 overflow-y-auto"></div>
         </div>
     </div>
 
@@ -232,6 +309,11 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
         let isEditing = false;
         let profileRestaurantName = '';  // nome do restaurante aberto no perfil/histórico
         let profileRestaurantTipo = '';
+        let currentTab = 'visitados';    // 'visitados' | 'desejos'
+        let wishlist = [];               // registros da coleção "desejos" (lista de restaurantes a visitar)
+        let draftWishId = null;          // id do item de desejo sendo criado/editado no modal
+        let isEditingWish = false;
+        let unsubscribeWishlistSnapshot = null;
 
         // Tipos de comida disponíveis para cadastro e filtro
         const TIPOS_COMIDA = [
@@ -246,12 +328,12 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
 
         // Cor de acordo com a nota: < 5 vermelho, 5 a 7 laranja, 8 a 10 verde
         const notaBadgeClasses = (notaStr) => {
-            if (!notaStr) return 'bg-rose-50/60 border-rose-100 text-stone-600';
+            if (!notaStr) return 'bg-rose-50/60 dark:bg-stone-900/40 border-rose-100 dark:border-stone-600 text-stone-600 dark:text-stone-400';
             const num = parseFloat(String(notaStr).trim().replace(',', '.'));
-            if (isNaN(num)) return 'bg-rose-50/60 border-rose-100 text-stone-600';
-            if (num < 5) return 'bg-red-50 border-red-300 text-red-600';
-            if (num < 8) return 'bg-orange-50 border-orange-300 text-orange-600';
-            return 'bg-emerald-50 border-emerald-300 text-emerald-600';
+            if (isNaN(num)) return 'bg-rose-50/60 dark:bg-stone-900/40 border-rose-100 dark:border-stone-600 text-stone-600 dark:text-stone-400';
+            if (num < 5) return 'bg-red-50 dark:bg-red-950/30 border-red-300 dark:border-red-800 text-red-600 dark:text-red-400';
+            if (num < 8) return 'bg-orange-50 dark:bg-orange-950/30 border-orange-300 dark:border-orange-800 text-orange-600 dark:text-orange-400';
+            return 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400';
         };
 
         // Nota média de um registro (visita), a partir das notas numéricas dos pratos dela
@@ -272,9 +354,9 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
         };
 
         const NOTA_BUCKETS = [
-            { key: 'ruim', label: 'Ruins', activeCls: 'bg-red-500 text-white border-transparent', inactiveCls: 'bg-red-50 border-red-200 text-red-600 hover:border-red-400' },
-            { key: 'medio', label: 'Médios', activeCls: 'bg-orange-500 text-white border-transparent', inactiveCls: 'bg-orange-50 border-orange-200 text-orange-600 hover:border-orange-400' },
-            { key: 'bom', label: 'Bons', activeCls: 'bg-emerald-500 text-white border-transparent', inactiveCls: 'bg-emerald-50 border-emerald-200 text-emerald-600 hover:border-emerald-400' }
+            { key: 'ruim', label: 'Ruins', activeCls: 'bg-red-500 text-white border-transparent', inactiveCls: 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:border-red-400' },
+            { key: 'medio', label: 'Médios', activeCls: 'bg-orange-500 text-white border-transparent', inactiveCls: 'bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800 text-orange-600 dark:text-orange-400 hover:border-orange-400' },
+            { key: 'bom', label: 'Bons', activeCls: 'bg-emerald-500 text-white border-transparent', inactiveCls: 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 hover:border-emerald-400' }
         ];
 
         // SEGURANÇA: escapa qualquer valor antes de inseri-lo via innerHTML,
@@ -299,9 +381,35 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
         const filterChipsEl = document.getElementById('filter-chips');
         const notaFilterChipsEl = document.getElementById('nota-filter-chips');
         const sortSelect = document.getElementById('sort-select');
+        const sortRow = document.getElementById('sort-row');
         const btnToggleFavoritos = document.getElementById('btn-toggle-favoritos');
         const btnExport = document.getElementById('btn-export');
+        const btnImport = document.getElementById('btn-import');
+        const importFileInput = document.getElementById('import-file-input');
+        const btnStats = document.getElementById('btn-stats');
+        const btnThemeToggle = document.getElementById('btn-theme-toggle');
+        const themeToggleIcon = document.getElementById('theme-toggle-icon');
+        const tabVisitados = document.getElementById('tab-visitados');
+        const tabDesejos = document.getElementById('tab-desejos');
+        const wishlistListEl = document.getElementById('wishlist-list');
+        const wishlistEmptyState = document.getElementById('wishlist-empty-state');
+        const wishlistPermissionError = document.getElementById('wishlist-permission-error');
         let unsubscribeSnapshot = null;
+
+        // ===================== TEMA CLARO/ESCURO =====================
+        const applyThemeIcon = () => {
+            const isDark = document.documentElement.classList.contains('dark');
+            themeToggleIcon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+            const meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) meta.setAttribute('content', isDark ? '#1c1917' : '#fdf1f4');
+        };
+        applyThemeIcon();
+
+        btnThemeToggle.addEventListener('click', () => {
+            const isDark = document.documentElement.classList.toggle('dark');
+            try { localStorage.setItem('majuchef-theme', isDark ? 'dark' : 'light'); } catch (e) {}
+            applyThemeIcon();
+        });
 
         // Ordenação da lista de registros
         const SORTERS = {
@@ -317,24 +425,58 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             renderCards();
         });
 
-        // Alterna a UI do botão de favoritos entre ativo/inativo sem depender
-        // da ordem de geração das classes do Tailwind (sempre remove um
-        // conjunto completo de classes antes de adicionar o outro).
+        // Alterna a UI do botão de favoritos entre ativo/inativo. Usa troca
+        // completa de className (em vez de classList.add/remove parcial) pra
+        // não depender da ordem de geração das classes do Tailwind, inclusive
+        // com as variantes de tema escuro.
+        const FAV_TOGGLE_ACTIVE_CLS = 'flex-shrink-0 w-9 h-9 rounded-lg transition flex items-center justify-center bg-rose-500 border border-rose-500 text-white';
+        const FAV_TOGGLE_INACTIVE_CLS = 'flex-shrink-0 w-9 h-9 rounded-lg transition flex items-center justify-center bg-white border border-rose-200 text-stone-400 hover:text-rose-500 hover:border-rose-300 dark:bg-stone-800 dark:border-stone-600 dark:text-stone-500 dark:hover:text-rose-400 dark:hover:border-stone-500';
         const updateFavoritosToggleUI = () => {
-            if (filterFavoritos) {
-                btnToggleFavoritos.classList.remove('bg-white', 'border-rose-200', 'text-stone-400');
-                btnToggleFavoritos.classList.add('bg-rose-500', 'border-rose-500', 'text-white');
-            } else {
-                btnToggleFavoritos.classList.remove('bg-rose-500', 'border-rose-500', 'text-white');
-                btnToggleFavoritos.classList.add('bg-white', 'border-rose-200', 'text-stone-400');
-            }
+            btnToggleFavoritos.className = filterFavoritos ? FAV_TOGGLE_ACTIVE_CLS : FAV_TOGGLE_INACTIVE_CLS;
         };
+        updateFavoritosToggleUI();
 
         btnToggleFavoritos.addEventListener('click', () => {
             filterFavoritos = !filterFavoritos;
             updateFavoritosToggleUI();
             renderCards();
         });
+
+        // ===================== ABAS: VISITADOS / QUERO VISITAR =====================
+        const TAB_ACTIVE_CLS = 'tab-btn flex-1 py-2 rounded-lg text-sm font-semibold transition bg-rose-500 text-white shadow shadow-rose-200/50 dark:shadow-black/30';
+        const TAB_INACTIVE_CLS = 'tab-btn flex-1 py-2 rounded-lg text-sm font-semibold transition bg-white text-stone-500 border border-rose-200 hover:border-rose-300 dark:bg-stone-800 dark:text-stone-400 dark:border-stone-600 dark:hover:border-stone-500';
+        tabVisitados.textContent = 'Visitados';
+        tabDesejos.textContent = 'Quero visitar';
+
+        const setActiveTab = (tab) => {
+            currentTab = tab;
+            tabVisitados.className = tab === 'visitados' ? TAB_ACTIVE_CLS : TAB_INACTIVE_CLS;
+            tabDesejos.className = tab === 'desejos' ? TAB_ACTIVE_CLS : TAB_INACTIVE_CLS;
+
+            const isVisitados = tab === 'visitados';
+            sortRow.classList.toggle('hidden', !isVisitados);
+            cardsList.classList.toggle('hidden', !isVisitados);
+            wishlistListEl.classList.toggle('hidden', isVisitados);
+            if (isVisitados) {
+                wishlistEmptyState.classList.add('hidden');
+                wishlistPermissionError.classList.add('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                permissionError.classList.add('hidden');
+                filterChipsEl.classList.add('hidden');
+                notaFilterChipsEl.classList.add('hidden');
+            }
+
+            if (isVisitados) renderCards(); else renderWishlist();
+        };
+
+        tabVisitados.addEventListener('click', () => setActiveTab('visitados'));
+        tabDesejos.addEventListener('click', () => setActiveTab('desejos'));
+        // Só ajusta a aparência dos botões aqui (a aba "visitados" já começa
+        // visível no HTML por padrão); renderCards/renderWishlist ainda não
+        // existem neste ponto do script, então não chamamos setActiveTab().
+        tabVisitados.className = TAB_ACTIVE_CLS;
+        tabDesejos.className = TAB_INACTIVE_CLS;
 
         // Marca/desmarca um registro como favorito direto pelo card, sem
         // precisar abrir o modal de edição.
@@ -382,14 +524,15 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             }
         };
 
-        // Exporta todos os registros como um arquivo .json, pra servir de
-        // backup independente do Firebase.
+        // Exporta todos os registros (visitados + lista de desejos) como um
+        // arquivo .json, pra servir de backup independente do Firebase.
         btnExport.addEventListener('click', () => {
-            if (!entries.length) { alert('Ainda não há registros para exportar.'); return; }
+            if (!entries.length && !wishlist.length) { alert('Ainda não há registros para exportar.'); return; }
             const backup = {
                 exportadoEm: new Date().toISOString(),
                 totalRegistros: entries.length,
-                registros: entries
+                registros: entries,
+                desejos: wishlist
             };
             const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
@@ -400,6 +543,45 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             a.click();
             a.remove();
             URL.revokeObjectURL(url);
+        });
+
+        // Importa um arquivo .json exportado pelo próprio MajuChef, restaurando
+        // os registros no Firestore (mesmo id = sobrescreve o que já existir).
+        btnImport.addEventListener('click', () => importFileInput.click());
+
+        importFileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            e.target.value = ''; // permite selecionar o mesmo arquivo de novo depois
+            if (!file) return;
+
+            try {
+                const text = await file.text();
+                const backup = JSON.parse(text);
+                const registros = Array.isArray(backup.registros) ? backup.registros : [];
+                const desejosBackup = Array.isArray(backup.desejos) ? backup.desejos : [];
+
+                if (!registros.length && !desejosBackup.length) {
+                    alert('Esse arquivo não parece ser um backup válido do MajuChef.');
+                    return;
+                }
+                const total = registros.length + desejosBackup.length;
+                if (!confirm(`Isso vai importar ${total} registro(s) desse backup. Itens com o mesmo ID que já existirem serão substituídos. Continuar?`)) return;
+
+                for (const r of registros) {
+                    if (!r || !r.id) continue;
+                    const { id, ...rest } = r;
+                    await setDoc(doc(db, "avaliacoes", id), rest);
+                }
+                for (const w of desejosBackup) {
+                    if (!w || !w.id) continue;
+                    const { id, ...rest } = w;
+                    await setDoc(doc(db, "desejos", id), rest);
+                }
+                alert('Backup importado com sucesso!');
+            } catch (err) {
+                console.error('Erro ao importar backup:', err);
+                alert('Não foi possível importar esse arquivo. Confira se é um backup exportado pelo próprio MajuChef, e se a coleção "desejos" já está liberada nas regras do Firestore.');
+            }
         });
 
         // Popula o <select> de tipo de comida do modal a partir da lista única TIPOS_COMIDA
@@ -424,7 +606,7 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             filterChipsEl.classList.add('flex');
             const chipClass = (active) => active
                 ? 'px-3 py-1.5 rounded-full text-xs font-semibold bg-rose-500 text-white transition'
-                : 'px-3 py-1.5 rounded-full text-xs font-semibold bg-white border border-rose-200 text-stone-500 hover:border-rose-400 transition';
+                : 'px-3 py-1.5 rounded-full text-xs font-semibold bg-white dark:bg-stone-800 border border-rose-200 dark:border-stone-600 text-stone-500 dark:text-stone-400 hover:border-rose-400 transition';
             let html = `<button type="button" data-tipo="" class="${chipClass(filterTipo === '')}">Todos</button>`;
             presentTipos.forEach(t => {
                 html += `<button type="button" data-tipo="${escapeHtml(t)}" class="${chipClass(filterTipo === t)}">${escapeHtml(t)}</button>`;
@@ -451,7 +633,7 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             notaFilterChipsEl.classList.remove('hidden');
             notaFilterChipsEl.classList.add('flex');
             const baseCls = 'px-3 py-1.5 rounded-full text-xs font-semibold border transition';
-            let html = `<button type="button" data-nota="" class="${baseCls} ${filterNota === '' ? 'bg-rose-500 text-white border-transparent' : 'bg-white border-rose-200 text-stone-500 hover:border-rose-400'}">Todos</button>`;
+            let html = `<button type="button" data-nota="" class="${baseCls} ${filterNota === '' ? 'bg-rose-500 text-white border-transparent' : 'bg-white dark:bg-stone-800 border-rose-200 dark:border-stone-600 text-stone-500 dark:text-stone-400 hover:border-rose-400'}">Todos</button>`;
             NOTA_BUCKETS.forEach(b => {
                 if (!presentBuckets.has(b.key)) return;
                 const active = filterNota === b.key;
@@ -475,13 +657,16 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                 appDiv.classList.remove('hidden');
                 btnOpenAdd.classList.remove('hidden');
                 loadEntries();
+                loadWishlist();
             } else {
                 currentUser = null;
                 if (unsubscribeSnapshot) { unsubscribeSnapshot(); unsubscribeSnapshot = null; }
+                if (unsubscribeWishlistSnapshot) { unsubscribeWishlistSnapshot(); unsubscribeWishlistSnapshot = null; }
                 // SEGURANÇA: limpa os dados e o estado da sessão anterior ao deslogar,
                 // para não deixar nenhum registro visível no DOM (nem por um instante)
                 // caso outra pessoa use o mesmo aparelho/navegador depois.
                 entries = [];
+                wishlist = [];
                 searchTerm = '';
                 filterTipo = '';
                 filterNota = '';
@@ -491,6 +676,7 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                 sortSelect.value = 'recentes';
                 updateFavoritosToggleUI();
                 cardsList.innerHTML = '';
+                wishlistListEl.innerHTML = '';
                 filterChipsEl.innerHTML = '';
                 filterChipsEl.classList.add('hidden');
                 filterChipsEl.classList.remove('flex');
@@ -499,6 +685,14 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                 notaFilterChipsEl.classList.remove('flex');
                 emptyState.classList.add('hidden');
                 permissionError.classList.add('hidden');
+                wishlistEmptyState.classList.add('hidden');
+                wishlistPermissionError.classList.add('hidden');
+                tabVisitados.className = TAB_ACTIVE_CLS;
+                tabDesejos.className = TAB_INACTIVE_CLS;
+                currentTab = 'visitados';
+                sortRow.classList.remove('hidden');
+                cardsList.classList.remove('hidden');
+                wishlistListEl.classList.add('hidden');
                 loginScreen.classList.remove('hidden');
                 appDiv.classList.add('hidden');
                 btnOpenAdd.classList.add('hidden');
@@ -556,7 +750,11 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             renderNotaFilterChips();
 
             let filtered = entries.filter(en => {
-                const matchesSearch = !searchTerm || (en.restaurante || '').toLowerCase().includes(searchTerm);
+                const matchesSearch = !searchTerm
+                    || (en.restaurante || '').toLowerCase().includes(searchTerm)
+                    || (en.obs || '').toLowerCase().includes(searchTerm)
+                    || (Array.isArray(en.pratos) && en.pratos.some(p => (p.nome || '').toLowerCase().includes(searchTerm)))
+                    || (Array.isArray(en.tags) && en.tags.some(t => (t || '').toLowerCase().includes(searchTerm)));
                 const matchesTipo = !filterTipo || en.tipo === filterTipo;
                 const matchesNota = !filterNota || getNotaBucket(getEntryAvgNota(en)) === filterNota;
                 const matchesFavorito = !filterFavoritos || en.favorito === true;
@@ -568,7 +766,7 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             emptyState.classList.toggle('hidden', entries.length > 0);
 
             if (entries.length > 0 && filtered.length === 0) {
-                cardsList.innerHTML = '<div class="text-center p-8 text-stone-400 text-sm">Nenhum restaurante encontrado com esse filtro.</div>';
+                cardsList.innerHTML = '<div class="text-center p-8 text-stone-400 dark:text-stone-500 text-sm">Nenhum restaurante encontrado com esse filtro.</div>';
                 return;
             }
 
@@ -591,26 +789,30 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                 const dataFmt = en.data ? formatDateBR(en.data) : '';
                 const visitCount = visitCounts[normalizeName(en.restaurante)] || 1;
 
+                const tags = Array.isArray(en.tags) ? en.tags : [];
+                const tagBadges = tags.length ? `<div class="flex flex-wrap gap-1 mt-1.5">${tags.map(t => `<span class="text-[10px] text-rose-400 dark:text-rose-300 bg-white dark:bg-stone-900/60 border border-rose-200 dark:border-stone-600 px-2 py-0.5 rounded-full">#${escapeHtml(t)}</span>`).join(' ')}</div>` : '';
+
                 const card = document.createElement('div');
-                card.className = "entry-card bg-white p-3 rounded-xl border border-rose-100 flex gap-3 cursor-pointer hover:border-rose-300 hover:shadow-md hover:shadow-rose-100 transition";
+                card.className = "entry-card bg-white dark:bg-stone-800 p-3 rounded-xl border border-rose-100 dark:border-stone-700 flex gap-3 cursor-pointer hover:border-rose-300 dark:hover:border-stone-500 hover:shadow-md hover:shadow-rose-100 dark:hover:shadow-black/20 transition";
                 card.dataset.id = en.id;
                 card.innerHTML = `
-                    <div class="w-10 h-10 rounded-lg bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-500 flex-shrink-0"><i class="fas fa-utensils"></i></div>
+                    <div class="w-10 h-10 rounded-lg bg-rose-50 dark:bg-stone-900/60 border border-rose-100 dark:border-stone-700 flex items-center justify-center text-rose-500 dark:text-rose-400 flex-shrink-0"><i class="fas fa-utensils"></i></div>
                     <div class="flex-1 min-w-0">
                         <div class="flex justify-between items-start gap-2">
-                            <div class="font-bold text-stone-800 truncate">${escapeHtml(en.restaurante) || 'Sem nome'}</div>
+                            <div class="font-bold text-stone-800 dark:text-stone-100 truncate">${escapeHtml(en.restaurante) || 'Sem nome'}</div>
                             <div class="flex items-center gap-2 flex-shrink-0">
-                                ${dataFmt ? `<span class="text-[11px] text-stone-400 whitespace-nowrap">${escapeHtml(dataFmt)}</span>` : ''}
-                                <button type="button" class="favorito-btn text-sm transition ${en.favorito ? 'text-rose-500' : 'text-stone-300 hover:text-rose-300'}" data-id="${escapeHtml(en.id)}" title="${en.favorito ? 'Remover dos favoritos' : 'Marcar como favorito'}"><i class="fas fa-heart"></i></button>
+                                ${dataFmt ? `<span class="text-[11px] text-stone-400 dark:text-stone-500 whitespace-nowrap">${escapeHtml(dataFmt)}</span>` : ''}
+                                <button type="button" class="favorito-btn text-sm transition ${en.favorito ? 'text-rose-500 dark:text-rose-400' : 'text-stone-300 dark:text-stone-600 hover:text-rose-300 dark:hover:text-rose-400'}" data-id="${escapeHtml(en.id)}" title="${en.favorito ? 'Remover dos favoritos' : 'Marcar como favorito'}"><i class="fas fa-heart"></i></button>
                             </div>
                         </div>
                         <div class="flex flex-wrap items-center gap-1 mt-1">
-                            ${en.tipo ? `<span class="inline-block text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">${escapeHtml(en.tipo)}</span>` : ''}
-                            ${en.preco ? `<span class="inline-block text-[10px] font-semibold text-stone-500 bg-stone-100 border border-stone-200 px-2 py-0.5 rounded-full">${escapeHtml(en.preco)}</span>` : ''}
-                            ${visitCount > 1 ? `<button type="button" class="profile-btn text-[10px] text-rose-500 hover:text-rose-700 font-semibold inline-flex items-center gap-1" data-restaurante="${escapeHtml(en.restaurante)}"><i class="fas fa-clock-rotate-left"></i> ${visitCount} visitas · ver histórico</button>` : ''}
-                            <button type="button" class="share-btn text-[10px] text-stone-400 hover:text-rose-600 font-semibold inline-flex items-center gap-1" data-id="${escapeHtml(en.id)}" title="Compartilhar recomendação"><i class="fas fa-share-nodes"></i></button>
+                            ${en.tipo ? `<span class="inline-block text-[10px] font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 px-2 py-0.5 rounded-full">${escapeHtml(en.tipo)}</span>` : ''}
+                            ${en.preco ? `<span class="inline-block text-[10px] font-semibold text-stone-500 dark:text-stone-400 bg-stone-100 dark:bg-stone-900/60 border border-stone-200 dark:border-stone-600 px-2 py-0.5 rounded-full">${escapeHtml(en.preco)}</span>` : ''}
+                            ${visitCount > 1 ? `<button type="button" class="profile-btn text-[10px] text-rose-500 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 font-semibold inline-flex items-center gap-1" data-restaurante="${escapeHtml(en.restaurante)}"><i class="fas fa-clock-rotate-left"></i> ${visitCount} visitas · ver histórico</button>` : ''}
+                            <button type="button" class="share-btn text-[10px] text-stone-400 dark:text-stone-500 hover:text-rose-600 dark:hover:text-rose-400 font-semibold inline-flex items-center gap-1" data-id="${escapeHtml(en.id)}" title="Compartilhar recomendação"><i class="fas fa-share-nodes"></i></button>
                         </div>
                         <div class="flex flex-wrap gap-1 mt-2">${badges}${extra}</div>
+                        ${tagBadges}
                     </div>
                 `;
                 cardsList.appendChild(card);
@@ -683,11 +885,11 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                 if (!isNaN(num)) allNotas.push(num);
             }));
             const avg = allNotas.length ? (allNotas.reduce((s, n) => s + n, 0) / allNotas.length) : null;
-            const avgCls = avg !== null ? notaBadgeClasses(avg) : 'bg-rose-50/60 border-rose-100 text-stone-600';
+            const avgCls = avg !== null ? notaBadgeClasses(avg) : 'bg-rose-50/60 dark:bg-stone-900/40 border-rose-100 dark:border-stone-600 text-stone-600 dark:text-stone-400';
             const avgTxt = avg !== null ? avg.toFixed(1).replace('.', ',') : '—';
 
             profileSubtitleEl.innerHTML = `
-                ${profileRestaurantTipo ? `<span class="inline-block text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">${escapeHtml(profileRestaurantTipo)}</span>` : ''}
+                ${profileRestaurantTipo ? `<span class="inline-block text-[10px] font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 px-2 py-0.5 rounded-full">${escapeHtml(profileRestaurantTipo)}</span>` : ''}
                 <span>${visits.length} visita${visits.length > 1 ? 's' : ''}</span>
                 <span class="${avgCls} border px-1.5 py-0.5 rounded-full font-semibold text-[11px]">média ${avgTxt}</span>
             `;
@@ -700,10 +902,10 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                 }).join(' ');
                 const dataFmt = v.data ? formatDateBR(v.data) : 'Sem data';
                 return `
-                    <button type="button" class="visit-item w-full text-left bg-rose-50/40 hover:bg-rose-50 border border-rose-100 rounded-xl p-3 transition" data-id="${escapeHtml(v.id)}">
-                        <div class="text-xs font-semibold text-stone-500 mb-1.5">${escapeHtml(dataFmt)}</div>
-                        <div class="flex flex-wrap gap-1">${badges || '<span class="text-xs text-stone-400">Sem pratos registrados</span>'}</div>
-                        ${v.obs ? `<div class="text-xs text-stone-500 mt-1.5 italic">${escapeHtml(v.obs)}</div>` : ''}
+                    <button type="button" class="visit-item w-full text-left bg-rose-50/40 dark:bg-stone-900/40 hover:bg-rose-50 dark:hover:bg-stone-900/70 border border-rose-100 dark:border-stone-700 rounded-xl p-3 transition" data-id="${escapeHtml(v.id)}">
+                        <div class="text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1.5">${escapeHtml(dataFmt)}</div>
+                        <div class="flex flex-wrap gap-1">${badges || '<span class="text-xs text-stone-400 dark:text-stone-500">Sem pratos registrados</span>'}</div>
+                        ${v.obs ? `<div class="text-xs text-stone-500 dark:text-stone-400 mt-1.5 italic">${escapeHtml(v.obs)}</div>` : ''}
                     </button>
                 `;
             }).join('');
@@ -735,10 +937,229 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             document.getElementById('f-tipo').value = tipo;
         });
 
+        // ===================== LISTA DE DESEJOS (restaurantes que queremos visitar) =====================
+        // Fica numa coleção própria no Firestore ("desejos"), separada dos
+        // registros de visita ("avaliacoes"). IMPORTANTE: as regras do
+        // Firestore precisam liberar essa coleção também (mesma lista de
+        // e-mails autorizados), senão só vai dar erro de permissão aqui.
+        const wishlistModal = document.getElementById('wishlist-modal');
+        const btnDeleteWish = document.getElementById('btn-delete-wish');
+
+        const loadWishlist = () => {
+            wishlistPermissionError.classList.add('hidden');
+            unsubscribeWishlistSnapshot = onSnapshot(collection(db, "desejos"), (snapshot) => {
+                wishlist = [];
+                snapshot.forEach((d) => wishlist.push({ id: d.id, ...d.data() }));
+                if (currentTab === 'desejos') renderWishlist();
+            }, (error) => {
+                console.error("Erro ao carregar lista de desejos:", error);
+                if (error.code === 'permission-denied' && currentTab === 'desejos') {
+                    wishlistPermissionError.classList.remove('hidden');
+                    wishlistListEl.innerHTML = '';
+                    wishlistEmptyState.classList.add('hidden');
+                }
+            });
+        };
+
+        const renderWishlist = () => {
+            wishlistPermissionError.classList.add('hidden');
+            const filtered = wishlist.filter(w => {
+                if (!searchTerm) return true;
+                return (w.nome || '').toLowerCase().includes(searchTerm) || (w.motivo || '').toLowerCase().includes(searchTerm);
+            }).slice().sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+
+            wishlistListEl.innerHTML = '';
+            wishlistEmptyState.classList.toggle('hidden', wishlist.length > 0);
+
+            if (wishlist.length > 0 && filtered.length === 0) {
+                wishlistListEl.innerHTML = '<div class="text-center p-8 text-stone-400 dark:text-stone-500 text-sm">Nenhum item encontrado com essa busca.</div>';
+                return;
+            }
+
+            filtered.forEach(w => {
+                const card = document.createElement('div');
+                card.className = "wishlist-card bg-white dark:bg-stone-800 p-3 rounded-xl border border-rose-100 dark:border-stone-700 flex gap-3 cursor-pointer hover:border-rose-300 dark:hover:border-stone-500 hover:shadow-md hover:shadow-rose-100 dark:hover:shadow-black/20 transition";
+                card.dataset.id = w.id;
+                card.innerHTML = `
+                    <div class="w-10 h-10 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-800 flex items-center justify-center text-amber-500 dark:text-amber-400 flex-shrink-0"><i class="fas fa-bookmark"></i></div>
+                    <div class="flex-1 min-w-0">
+                        <div class="font-bold text-stone-800 dark:text-stone-100 truncate">${escapeHtml(w.nome) || 'Sem nome'}</div>
+                        ${w.motivo ? `<div class="text-xs text-stone-500 dark:text-stone-400 mt-1">${escapeHtml(w.motivo)}</div>` : ''}
+                        <button type="button" class="wish-visit-btn mt-2 text-[11px] text-rose-500 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 font-semibold inline-flex items-center gap-1" data-id="${escapeHtml(w.id)}"><i class="fas fa-utensils"></i> Já fomos!</button>
+                    </div>
+                `;
+                wishlistListEl.appendChild(card);
+            });
+        };
+
+        wishlistListEl.addEventListener('click', (e) => {
+            const visitBtn = e.target.closest('.wish-visit-btn');
+            if (visitBtn) {
+                e.stopPropagation();
+                goVisitWishlistItem(visitBtn.dataset.id);
+                return;
+            }
+            const card = e.target.closest('.wishlist-card');
+            if (card && card.dataset.id) {
+                window.openWishlistEditModal(card.dataset.id);
+            }
+        });
+
+        // Marca que já foram nesse restaurante: remove da lista de desejos e
+        // abre o formulário de nova visita já com o nome preenchido.
+        const goVisitWishlistItem = async (id) => {
+            const w = wishlist.find(x => x.id === id);
+            if (!w) return;
+            try {
+                await deleteDoc(doc(db, "desejos", id));
+            } catch (err) {
+                console.error('Erro ao remover da lista de desejos:', err);
+            }
+            window.openAddModal();
+            document.getElementById('f-restaurante').value = w.nome || '';
+        };
+
+        const resetWishlistFields = () => {
+            document.getElementById('w-nome').value = '';
+            document.getElementById('w-motivo').value = '';
+        };
+
+        window.openWishlistAddModal = () => {
+            isEditingWish = false;
+            draftWishId = doc(collection(db, "desejos")).id;
+            resetWishlistFields();
+            document.getElementById('wishlist-modal-title').innerText = 'Quero visitar';
+            btnDeleteWish.classList.add('hidden');
+            wishlistModal.classList.remove('hidden');
+            wishlistModal.classList.add('flex');
+        };
+
+        window.openWishlistEditModal = (id) => {
+            const w = wishlist.find(x => x.id === id);
+            if (!w) return;
+            isEditingWish = true;
+            draftWishId = id;
+            document.getElementById('w-nome').value = w.nome || '';
+            document.getElementById('w-motivo').value = w.motivo || '';
+            document.getElementById('wishlist-modal-title').innerText = 'Editar item';
+            btnDeleteWish.classList.remove('hidden');
+            wishlistModal.classList.remove('hidden');
+            wishlistModal.classList.add('flex');
+        };
+
+        window.closeWishlistModal = () => {
+            wishlistModal.classList.add('hidden');
+            wishlistModal.classList.remove('flex');
+            draftWishId = null;
+        };
+
+        document.getElementById('btn-save-wish').addEventListener('click', async () => {
+            const nome = document.getElementById('w-nome').value.trim();
+            if (!nome) { alert('Preencha o nome do restaurante.'); return; }
+            const data = {
+                nome,
+                motivo: document.getElementById('w-motivo').value.trim(),
+                criadoPorEmail: currentUser.email
+            };
+            try {
+                if (isEditingWish) {
+                    await updateDoc(doc(db, "desejos", draftWishId), data);
+                } else {
+                    await setDoc(doc(db, "desejos", draftWishId), { ...data, createdAt: new Date().toISOString() });
+                }
+                window.closeWishlistModal();
+            } catch (err) {
+                console.error('Erro ao salvar item da lista de desejos:', err);
+                alert('Não foi possível salvar. Confira sua conexão e se a coleção "desejos" está liberada nas regras do Firestore.');
+            }
+        });
+
+        btnDeleteWish.addEventListener('click', async () => {
+            if (!draftWishId || !confirm('Excluir este item da lista de desejos?')) return;
+            try {
+                await deleteDoc(doc(db, "desejos", draftWishId));
+                window.closeWishlistModal();
+            } catch (err) {
+                console.error('Erro ao excluir item da lista de desejos:', err);
+                alert('Não foi possível excluir.');
+            }
+        });
+
+        // ===================== RESUMO / ESTATÍSTICAS =====================
+        const statsModal = document.getElementById('stats-modal');
+        const statsBodyEl = document.getElementById('stats-body');
+
+        const statRow = (label, value, valueCls = 'text-rose-600 dark:text-rose-400') => `
+            <div class="flex justify-between items-center gap-3 bg-rose-50/60 dark:bg-stone-900/40 rounded-lg px-3 py-2.5">
+                <span class="text-sm text-stone-600 dark:text-stone-300">${label}</span>
+                <span class="font-bold text-sm text-right ${valueCls}">${value}</span>
+            </div>
+        `;
+
+        window.openStatsModal = () => {
+            const totalVisitas = entries.length;
+            const distinctRestaurantes = new Set(entries.map(en => normalizeName(en.restaurante)).filter(Boolean)).size;
+            const totalFavoritos = entries.filter(en => en.favorito).length;
+
+            const tipoCounts = {};
+            entries.forEach(en => { if (en.tipo) tipoCounts[en.tipo] = (tipoCounts[en.tipo] || 0) + 1; });
+            let tipoTop = '—';
+            let tipoTopCount = 0;
+            Object.entries(tipoCounts).forEach(([tipo, count]) => {
+                if (count > tipoTopCount) { tipoTop = tipo; tipoTopCount = count; }
+            });
+
+            const allNotas = [];
+            entries.forEach(en => (Array.isArray(en.pratos) ? en.pratos : []).forEach(p => {
+                const num = parseFloat(String(p.nota || '').trim().replace(',', '.'));
+                if (!isNaN(num)) allNotas.push(num);
+            }));
+            const notaMedia = allNotas.length ? (allNotas.reduce((s, n) => s + n, 0) / allNotas.length) : null;
+
+            // Restaurante com a melhor média (considerando todas as visitas dele juntas)
+            const porRestaurante = {};
+            entries.forEach(en => {
+                const key = normalizeName(en.restaurante);
+                if (!key) return;
+                if (!porRestaurante[key]) porRestaurante[key] = { nome: en.restaurante, notas: [] };
+                (Array.isArray(en.pratos) ? en.pratos : []).forEach(p => {
+                    const num = parseFloat(String(p.nota || '').trim().replace(',', '.'));
+                    if (!isNaN(num)) porRestaurante[key].notas.push(num);
+                });
+            });
+            let melhorNome = '—';
+            let melhorMedia = -1;
+            Object.values(porRestaurante).forEach(r => {
+                if (!r.notas.length) return;
+                const media = r.notas.reduce((s, n) => s + n, 0) / r.notas.length;
+                if (media > melhorMedia) { melhorMedia = media; melhorNome = r.nome; }
+            });
+
+            statsBodyEl.innerHTML = [
+                statRow('Restaurantes visitados', distinctRestaurantes),
+                statRow('Total de visitas registradas', totalVisitas),
+                statRow('Tipo de comida mais visitado', tipoTop === '—' ? '—' : `${escapeHtml(tipoTop)} (${tipoTopCount}x)`),
+                statRow('Nota média geral', notaMedia !== null ? notaMedia.toFixed(1).replace('.', ',') : '—'),
+                statRow('Restaurante com melhor nota', melhorMedia >= 0 ? escapeHtml(melhorNome) : '—', 'text-emerald-600 dark:text-emerald-400 truncate max-w-[55%]'),
+                statRow('Favoritos', totalFavoritos, 'text-rose-500 dark:text-rose-400'),
+                statRow('Na lista de desejos', wishlist.length, 'text-amber-600 dark:text-amber-400')
+            ].join('');
+
+            statsModal.classList.remove('hidden');
+            statsModal.classList.add('flex');
+        };
+
+        window.closeStatsModal = () => {
+            statsModal.classList.add('hidden');
+            statsModal.classList.remove('flex');
+        };
+
+        btnStats.addEventListener('click', () => window.openStatsModal());
+
         // ===================== PARSER DE TEXTO (sem IA, baseado em padrão fixo) ====
         const parseText = (text) => {
             const lines = text.split('\n');
-            const result = { restaurante: '', tipo: '', data: '', obs: '', pratos: [] };
+            const result = { restaurante: '', tipo: '', data: '', obs: '', pratos: [], tags: [] };
             let obsStarted = false;
             const obsLines = [];
 
@@ -770,6 +1191,9 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                     } else {
                         result.pratos.push({ nome: raw, nota: '' });
                     }
+                } else if (/^tags?\s*:/i.test(line)) {
+                    const raw = line.replace(/^tags?\s*:/i, '').trim();
+                    result.tags = raw.split(',').map(t => t.trim()).filter(Boolean);
                 } else if (/^obs\s*:/i.test(line)) {
                     obsStarted = true;
                     obsLines.push(line.replace(/^obs\s*:/i, '').trim());
@@ -786,6 +1210,7 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             document.getElementById('f-restaurante').value = parsed.restaurante;
             document.getElementById('f-tipo').value = parsed.tipo || '';
             if (parsed.data) document.getElementById('f-data').value = parsed.data;
+            document.getElementById('f-tags').value = (parsed.tags || []).join(', ');
             document.getElementById('f-obs').value = parsed.obs;
             renderPratosRows(parsed.pratos.length ? parsed.pratos : [{ nome: '', nota: '' }]);
         });
@@ -795,7 +1220,7 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
 
         // Feedback visual (borda colorida) no campo de nota, seguindo as mesmas faixas dos badges
         const applyNotaInputColor = (inputEl) => {
-            inputEl.classList.remove('border-red-400', 'border-orange-400', 'border-emerald-400', 'border-stone-300');
+            inputEl.classList.remove('border-red-400', 'border-orange-400', 'border-emerald-400', 'border-stone-300', 'dark:border-stone-600');
             const raw = inputEl.value.trim();
             const num = parseFloat(raw.replace(',', '.'));
             if (raw && !isNaN(num)) {
@@ -803,7 +1228,7 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                 else if (num < 8) inputEl.classList.add('border-orange-400');
                 else inputEl.classList.add('border-emerald-400');
             } else {
-                inputEl.classList.add('border-stone-300');
+                inputEl.classList.add('border-stone-300', 'dark:border-stone-600');
             }
         };
 
@@ -816,10 +1241,10 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             inputNome.placeholder = 'Nome do prato';
             inputNome.maxLength = 150;
             inputNome.value = nome;
-            inputNome.className = 'prato-nome flex-1 p-2 text-sm border border-rose-200 rounded-lg bg-rose-50/50 text-stone-800 focus:border-rose-400 outline-none transition';
+            inputNome.className = 'prato-nome flex-1 p-2 text-sm border border-rose-200 dark:border-stone-600 rounded-lg bg-rose-50/50 dark:bg-stone-900/60 text-stone-800 dark:text-stone-100 focus:border-rose-400 outline-none transition';
 
             const inputNota = document.createElement('select');
-            inputNota.className = 'prato-nota w-20 p-2 text-sm border border-rose-200 rounded-lg bg-rose-50/50 text-stone-800 focus:border-rose-400 outline-none transition';
+            inputNota.className = 'prato-nota w-20 p-2 text-sm border border-rose-200 dark:border-stone-600 rounded-lg bg-rose-50/50 dark:bg-stone-900/60 text-stone-800 dark:text-stone-100 focus:border-rose-400 outline-none transition';
             const optSemNota = document.createElement('option');
             optSemNota.value = '';
             optSemNota.textContent = '—';
@@ -839,7 +1264,7 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             const btnRemove = document.createElement('button');
             btnRemove.type = 'button';
             btnRemove.innerHTML = '<i class="fas fa-trash"></i>';
-            btnRemove.className = 'text-stone-400 hover:text-red-500 transition px-1';
+            btnRemove.className = 'text-stone-400 dark:text-stone-500 hover:text-red-500 dark:hover:text-red-400 transition px-1';
             btnRemove.onclick = () => row.remove();
 
             row.appendChild(inputNome);
@@ -865,6 +1290,7 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             document.getElementById('f-tipo').value = '';
             document.getElementById('f-data').value = new Date().toISOString().slice(0, 10);
             document.getElementById('f-preco').value = '';
+            document.getElementById('f-tags').value = '';
             document.getElementById('f-obs').value = '';
             document.getElementById('f-favorito').checked = false;
             renderPratosRows([{ nome: '', nota: '' }]);
@@ -879,7 +1305,10 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             modal.classList.remove('hidden');
             modal.classList.add('flex');
         };
-        document.getElementById('btn-open-add').addEventListener('click', () => window.openAddModal());
+        document.getElementById('btn-open-add').addEventListener('click', () => {
+            if (currentTab === 'desejos') window.openWishlistAddModal();
+            else window.openAddModal();
+        });
 
         window.openEditModal = (id) => {
             const en = entries.find(e => e.id === id);
@@ -891,6 +1320,7 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             document.getElementById('f-tipo').value = en.tipo || '';
             document.getElementById('f-data').value = en.data || '';
             document.getElementById('f-preco').value = en.preco || '';
+            document.getElementById('f-tags').value = Array.isArray(en.tags) ? en.tags.join(', ') : '';
             document.getElementById('f-obs').value = en.obs || '';
             document.getElementById('f-favorito').checked = !!en.favorito;
             renderPratosRows(Array.isArray(en.pratos) && en.pratos.length ? en.pratos : [{ nome: '', nota: '' }]);
@@ -916,6 +1346,8 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                 nota: row.querySelector('.prato-nota').value.trim()
             })).filter(p => p.nome || p.nota);
 
+            const tags = document.getElementById('f-tags').value.split(',').map(t => t.trim()).filter(Boolean);
+
             const data = {
                 restaurante,
                 tipo: document.getElementById('f-tipo').value || '',
@@ -923,6 +1355,7 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                 preco: document.getElementById('f-preco').value || '',
                 obs: document.getElementById('f-obs').value.trim(),
                 pratos,
+                tags,
                 favorito: document.getElementById('f-favorito').checked,
                 criadoPorEmail: currentUser.email
             };
