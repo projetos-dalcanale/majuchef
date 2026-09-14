@@ -46,8 +46,8 @@
                     <input type="password" id="auth-password" required minlength="6" autocomplete="current-password" class="w-full rounded-lg bg-rose-50/50 border-rose-200 text-stone-800 focus:border-rose-400 focus:ring-1 focus:ring-rose-400 p-2.5 outline-none transition">
                 </div>
                 <div class="text-red-500 text-sm hidden bg-red-50 p-2 rounded border border-red-200" id="auth-error"></div>
-                <button type="submit" class="w-full bg-rose-500 text-white font-bold p-3 rounded-lg hover:bg-rose-400 transition shadow-lg shadow-rose-200/50">Entrar / Cadastrar</button>
-                <p class="text-xs text-stone-400 text-center mt-2">Se o e-mail não existir, uma conta é criada automaticamente. Só quem estiver na lista de acesso (definida nas regras do Firestore) consegue ver os registros.</p>
+                <button type="submit" class="w-full bg-rose-500 text-white font-bold p-3 rounded-lg hover:bg-rose-400 transition shadow-lg shadow-rose-200/50">Entrar</button>
+                <p class="text-xs text-stone-400 text-center mt-2">As contas de acesso são criadas manualmente no Firebase Console. Só quem estiver na lista de e-mails autorizados (regras do Firestore) consegue ver os registros.</p>
             </form>
         </div>
     </div>
@@ -149,7 +149,7 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         // =====================================================================
@@ -292,18 +292,15 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                 await signInWithEmailAndPassword(auth, email, password);
                 errorDiv.classList.add('hidden');
             } catch (error) {
-                if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-                    try {
-                        await createUserWithEmailAndPassword(auth, email, password);
-                        errorDiv.classList.add('hidden');
-                    } catch (createError) {
-                        errorDiv.innerText = "Erro ao criar conta: " + createError.message;
-                        errorDiv.classList.remove('hidden');
-                    }
-                } else {
-                    errorDiv.innerText = "Erro no login: " + error.message;
-                    errorDiv.classList.remove('hidden');
-                }
+                // SEGURANÇA: contas não são mais criadas automaticamente por aqui.
+                // Se o app criasse contas sozinho, qualquer pessoa poderia tentar
+                // logar com um e-mail que ainda não tem conta (como o da Ana Julia)
+                // e "reservar" esse e-mail com uma senha própria, passando pela
+                // lista de acesso das regras do Firestore (que só olha o e-mail).
+                // As duas contas precisam já existir, criadas manualmente no
+                // Firebase Console (Authentication -> Users -> Add user).
+                errorDiv.innerText = "E-mail ou senha inválidos. As contas de acesso são criadas manualmente no Firebase Console, não pelo app.";
+                errorDiv.classList.remove('hidden');
             }
         });
 
