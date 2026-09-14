@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="MajuChef">
-    <meta name="theme-color" content="#fafaf9">
+    <meta name="theme-color" content="#fdf1f4">
     <meta name="mobile-web-app-capable" content="yes">
 
     <!-- Ícone usado ao "Adicionar à Tela de Início" no iPhone, e também como favicon -->
@@ -18,25 +18,35 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', system-ui, sans-serif; }
+        .font-display { font-family: 'Playfair Display', serif; }
+    </style>
 </head>
-<body class="bg-stone-50 text-stone-600 font-sans min-h-screen">
+<body class="bg-rose-50 text-stone-600 font-sans min-h-screen">
 
     <!-- TELA DE LOGIN -->
-    <div id="login-screen" class="fixed inset-0 bg-stone-50/95 flex items-center justify-center z-50 backdrop-blur-sm p-4">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm border border-stone-200">
-            <h2 class="text-2xl font-bold mb-1 text-center text-amber-600"><i class="fas fa-utensils mr-2"></i>MajuChef</h2>
-            <p class="text-center text-stone-400 text-sm mb-6">Onde comemos, o que pedimos, o que achamos.</p>
+    <div id="login-screen" class="fixed inset-0 bg-gradient-to-b from-rose-50 to-rose-100/70 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-xl shadow-rose-200/40 w-full max-w-sm border border-rose-100">
+            <div class="flex flex-col items-center mb-1">
+                <span class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-rose-500 text-white text-lg shadow-md shadow-rose-300/50 mb-2"><i class="fas fa-utensils"></i></span>
+                <h2 class="font-display text-2xl font-bold text-rose-700">MajuChef</h2>
+            </div>
+            <p class="text-center text-stone-400 text-sm mb-6 italic">Onde comemos, o que pedimos, o que achamos.</p>
             <form id="login-form" class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-stone-500 mb-1">E-mail</label>
-                    <input type="email" id="auth-email" required autocomplete="email" class="w-full rounded-lg bg-stone-100 border-stone-300 text-stone-800 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 p-2.5 outline-none transition">
+                    <input type="email" id="auth-email" required autocomplete="email" class="w-full rounded-lg bg-rose-50/50 border-rose-200 text-stone-800 focus:border-rose-400 focus:ring-1 focus:ring-rose-400 p-2.5 outline-none transition">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-stone-500 mb-1">Senha</label>
-                    <input type="password" id="auth-password" required minlength="6" autocomplete="current-password" class="w-full rounded-lg bg-stone-100 border-stone-300 text-stone-800 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 p-2.5 outline-none transition">
+                    <input type="password" id="auth-password" required minlength="6" autocomplete="current-password" class="w-full rounded-lg bg-rose-50/50 border-rose-200 text-stone-800 focus:border-rose-400 focus:ring-1 focus:ring-rose-400 p-2.5 outline-none transition">
                 </div>
                 <div class="text-red-500 text-sm hidden bg-red-50 p-2 rounded border border-red-200" id="auth-error"></div>
-                <button type="submit" class="w-full bg-amber-600 text-white font-bold p-3 rounded-lg hover:bg-amber-500 transition shadow-lg shadow-amber-200/40">Entrar / Cadastrar</button>
+                <button type="submit" class="w-full bg-rose-500 text-white font-bold p-3 rounded-lg hover:bg-rose-400 transition shadow-lg shadow-rose-200/50">Entrar / Cadastrar</button>
                 <p class="text-xs text-stone-400 text-center mt-2">Se o e-mail não existir, uma conta é criada automaticamente. Só quem estiver na lista de acesso (definida nas regras do Firestore) consegue ver os registros.</p>
             </form>
         </div>
@@ -44,20 +54,20 @@
 
     <!-- APP PRINCIPAL -->
     <div id="app" class="hidden max-w-md mx-auto min-h-screen flex flex-col pb-24">
-        <header class="sticky top-0 z-30 bg-stone-50/95 backdrop-blur-sm border-b border-stone-200 px-4 pt-4 pb-3">
+        <header class="sticky top-0 z-30 bg-rose-50/95 backdrop-blur-sm border-b border-rose-100 px-4 pt-4 pb-3">
             <div class="flex items-center justify-between mb-3">
-                <h1 class="text-lg font-bold text-amber-600"><i class="fas fa-utensils mr-2"></i>MajuChef</h1>
-                <button id="btn-logout" class="text-stone-400 hover:text-stone-800 text-sm transition"><i class="fas fa-sign-out-alt"></i></button>
+                <h1 class="font-display text-lg font-bold text-rose-700 flex items-center"><span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-rose-500 text-white text-xs mr-2"><i class="fas fa-utensils"></i></span>MajuChef</h1>
+                <button id="btn-logout" class="text-stone-400 hover:text-rose-600 text-sm transition"><i class="fas fa-sign-out-alt"></i></button>
             </div>
             <div class="relative">
                 <i class="fas fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-sm"></i>
-                <input type="text" id="search-input" placeholder="Buscar por restaurante..." class="w-full pl-9 p-2.5 text-sm rounded-lg bg-white border border-stone-200 text-stone-800 focus:border-amber-500 outline-none transition">
+                <input type="text" id="search-input" placeholder="Buscar por restaurante..." class="w-full pl-9 p-2.5 text-sm rounded-lg bg-white border border-rose-200 text-stone-800 focus:border-rose-400 outline-none transition">
             </div>
             <div id="filter-chips" class="hidden flex flex-wrap gap-2 mt-2"></div>
         </header>
 
         <main class="flex-1 px-4 pt-4">
-            <div id="empty-state" class="hidden text-center p-10 text-stone-400 bg-stone-100/70 rounded-xl border border-dashed border-stone-200">
+            <div id="empty-state" class="hidden text-center p-10 text-stone-400 bg-rose-50/70 rounded-xl border border-dashed border-rose-200">
                 Nenhum restaurante registrado ainda. Toque no + para adicionar o primeiro.
             </div>
             <div id="permission-error" class="hidden text-center p-6 text-amber-600 bg-amber-50 rounded-xl border border-amber-300 text-sm">
@@ -68,17 +78,17 @@
     </div>
 
     <!-- BOTÃO FLUTUANTE DE ADICIONAR -->
-    <button id="btn-open-add" class="hidden fixed bottom-6 right-6 z-30 w-14 h-14 rounded-full bg-amber-600 hover:bg-amber-500 text-white text-xl shadow-lg shadow-amber-200/50 flex items-center justify-center transition">
+    <button id="btn-open-add" class="hidden fixed bottom-6 right-6 z-30 w-14 h-14 rounded-full bg-rose-500 hover:bg-rose-400 text-white text-xl shadow-lg shadow-rose-300/50 flex items-center justify-center transition">
         <i class="fas fa-plus"></i>
     </button>
 
     <!-- MODAL DE ADICIONAR / EDITAR -->
     <div id="entry-modal" class="fixed inset-0 bg-stone-900/30 backdrop-blur-sm hidden items-center justify-center z-50 p-0 sm:p-4">
-        <div class="bg-white sm:rounded-2xl shadow-2xl w-full sm:max-w-lg h-full sm:h-auto sm:max-h-[92vh] flex flex-col border-0 sm:border border-stone-200 overflow-hidden">
+        <div class="bg-white sm:rounded-2xl shadow-2xl w-full sm:max-w-lg h-full sm:h-auto sm:max-h-[92vh] flex flex-col border-0 sm:border border-rose-100 overflow-hidden">
 
-            <div class="bg-stone-50 p-4 border-b border-stone-200 flex justify-between items-center">
-                <h2 id="modal-title" class="text-lg font-bold text-stone-800">Novo Registro</h2>
-                <button onclick="closeModal()" class="text-stone-400 hover:text-stone-800 text-2xl leading-none transition">&times;</button>
+            <div class="bg-rose-50 p-4 border-b border-rose-100 flex justify-between items-center">
+                <h2 id="modal-title" class="font-display text-lg font-bold text-rose-700">Novo Registro</h2>
+                <button onclick="closeModal()" class="text-stone-400 hover:text-rose-600 text-2xl leading-none transition">&times;</button>
             </div>
 
             <div class="flex-1 overflow-y-auto p-5 space-y-5">
@@ -90,48 +100,48 @@ Tipo: Japonesa
 Data: 20/09/2026
 Prato: Nome do prato - Nota
 Prato: Outro prato - Nota
-Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-stone-300 rounded-lg bg-stone-50 text-stone-800 focus:border-amber-500 outline-none transition font-mono"></textarea>
+Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-rose-200 rounded-lg bg-rose-50/50 text-stone-800 focus:border-rose-400 outline-none transition font-mono"></textarea>
                     <p class="text-[11px] text-stone-400 mt-1 leading-tight">Use uma linha para cada campo, começando com <span class="text-stone-500">Restaurante:</span>, <span class="text-stone-500">Tipo:</span>, <span class="text-stone-500">Data:</span>, <span class="text-stone-500">Prato:</span> (uma por prato, terminando com "- Nota") e <span class="text-stone-500">Obs:</span>.</p>
-                    <button type="button" id="btn-parse" class="mt-2 w-full bg-stone-100 hover:bg-stone-200 text-amber-600 text-sm font-semibold py-2 rounded-lg transition"><i class="fas fa-wand-magic-sparkles mr-2"></i>Preencher campos com esse texto</button>
+                    <button type="button" id="btn-parse" class="mt-2 w-full bg-rose-100/60 hover:bg-rose-100 text-rose-600 text-sm font-semibold py-2 rounded-lg transition"><i class="fas fa-wand-magic-sparkles mr-2"></i>Preencher campos com esse texto</button>
                 </div>
 
-                <div class="border-t border-stone-200 pt-4 space-y-4">
+                <div class="border-t border-rose-100 pt-4 space-y-4">
                     <div>
                         <label class="block text-xs font-semibold text-stone-500 mb-1 uppercase tracking-wider">Restaurante</label>
-                        <input type="text" id="f-restaurante" maxlength="150" required class="w-full p-2.5 text-sm border border-stone-300 rounded-lg bg-stone-50 text-stone-800 focus:border-amber-500 outline-none transition">
+                        <input type="text" id="f-restaurante" maxlength="150" required class="w-full p-2.5 text-sm border border-rose-200 rounded-lg bg-rose-50/50 text-stone-800 focus:border-rose-400 outline-none transition">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-stone-500 mb-1 uppercase tracking-wider">Tipo de comida</label>
-                        <select id="f-tipo" class="w-full p-2.5 text-sm border border-stone-300 rounded-lg bg-stone-50 text-stone-800 focus:border-amber-500 outline-none transition">
+                        <select id="f-tipo" class="w-full p-2.5 text-sm border border-rose-200 rounded-lg bg-rose-50/50 text-stone-800 focus:border-rose-400 outline-none transition">
                             <option value="">Selecione...</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-stone-500 mb-1 uppercase tracking-wider">Data</label>
-                        <input type="date" id="f-data" class="w-full p-2.5 text-sm border border-stone-300 rounded-lg bg-stone-50 text-stone-800 focus:border-amber-500 outline-none transition">
+                        <input type="date" id="f-data" class="w-full p-2.5 text-sm border border-rose-200 rounded-lg bg-rose-50/50 text-stone-800 focus:border-rose-400 outline-none transition">
                     </div>
 
                     <div>
                         <div class="flex justify-between items-center mb-2">
                             <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wider">Pratos e notas</label>
-                            <button type="button" id="btn-add-prato" class="text-amber-600 hover:text-amber-700 text-xs transition"><i class="fas fa-plus"></i> Adicionar prato</button>
+                            <button type="button" id="btn-add-prato" class="text-rose-600 hover:text-rose-700 text-xs transition"><i class="fas fa-plus"></i> Adicionar prato</button>
                         </div>
                         <div id="pratos-list" class="space-y-2"></div>
                     </div>
 
                     <div>
                         <label class="block text-xs font-semibold text-stone-500 mb-1 uppercase tracking-wider">Observações</label>
-                        <textarea id="f-obs" rows="3" class="w-full p-2.5 text-sm border border-stone-300 rounded-lg bg-stone-50 text-stone-800 focus:border-amber-500 outline-none transition"></textarea>
+                        <textarea id="f-obs" rows="3" class="w-full p-2.5 text-sm border border-rose-200 rounded-lg bg-rose-50/50 text-stone-800 focus:border-rose-400 outline-none transition"></textarea>
                     </div>
 
                 </div>
             </div>
 
-            <div class="p-4 border-t border-stone-200 bg-stone-50 flex justify-between gap-3">
+            <div class="p-4 border-t border-rose-100 bg-rose-50 flex justify-between gap-3">
                 <button id="btn-delete-entry" class="hidden px-4 py-2.5 text-red-500 font-semibold hover:bg-red-50 rounded-lg transition text-sm"><i class="fas fa-trash mr-1"></i> Excluir</button>
                 <div class="flex gap-3 ml-auto">
-                    <button onclick="closeModal()" class="px-4 py-2.5 text-stone-600 font-semibold hover:bg-stone-200 rounded-lg transition text-sm">Cancelar</button>
-                    <button id="btn-save-entry" class="px-6 py-2.5 bg-amber-600 text-white font-bold rounded-lg shadow-lg shadow-amber-200/40 hover:bg-amber-500 transition text-sm">Salvar</button>
+                    <button onclick="closeModal()" class="px-4 py-2.5 text-stone-600 font-semibold hover:bg-rose-100 rounded-lg transition text-sm">Cancelar</button>
+                    <button id="btn-save-entry" class="px-6 py-2.5 bg-rose-500 text-white font-bold rounded-lg shadow-lg shadow-rose-200/50 hover:bg-rose-400 transition text-sm">Salvar</button>
                 </div>
             </div>
         </div>
@@ -175,9 +185,9 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-sto
 
         // Cor de acordo com a nota: < 5 vermelho, 5 a 7 laranja, 8 a 10 verde
         const notaBadgeClasses = (notaStr) => {
-            if (!notaStr) return 'bg-stone-50 border-stone-200 text-stone-600';
+            if (!notaStr) return 'bg-rose-50/60 border-rose-100 text-stone-600';
             const num = parseFloat(String(notaStr).trim().replace(',', '.'));
-            if (isNaN(num)) return 'bg-stone-50 border-stone-200 text-stone-600';
+            if (isNaN(num)) return 'bg-rose-50/60 border-rose-100 text-stone-600';
             if (num < 5) return 'bg-red-50 border-red-300 text-red-600';
             if (num < 8) return 'bg-orange-50 border-orange-300 text-orange-600';
             return 'bg-emerald-50 border-emerald-300 text-emerald-600';
@@ -226,8 +236,8 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-sto
             filterChipsEl.classList.remove('hidden');
             filterChipsEl.classList.add('flex');
             const chipClass = (active) => active
-                ? 'px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-600 text-white transition'
-                : 'px-3 py-1.5 rounded-full text-xs font-semibold bg-white border border-stone-200 text-stone-500 hover:border-amber-400 transition';
+                ? 'px-3 py-1.5 rounded-full text-xs font-semibold bg-rose-500 text-white transition'
+                : 'px-3 py-1.5 rounded-full text-xs font-semibold bg-white border border-rose-200 text-stone-500 hover:border-rose-400 transition';
             let html = `<button type="button" data-tipo="" class="${chipClass(filterTipo === '')}">Todos</button>`;
             presentTipos.forEach(t => {
                 html += `<button type="button" data-tipo="${escapeHtml(t)}" class="${chipClass(filterTipo === t)}">${escapeHtml(t)}</button>`;
@@ -336,10 +346,10 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-sto
                 const dataFmt = en.data ? formatDateBR(en.data) : '';
 
                 const card = document.createElement('div');
-                card.className = "bg-white p-3 rounded-xl border border-stone-200 flex gap-3 cursor-pointer hover:border-amber-400 transition";
+                card.className = "bg-white p-3 rounded-xl border border-rose-100 flex gap-3 cursor-pointer hover:border-rose-300 hover:shadow-md hover:shadow-rose-100 transition";
                 card.onclick = () => openEditModal(en.id);
                 card.innerHTML = `
-                    <div class="w-10 h-10 rounded-lg bg-stone-50 border border-stone-200 flex items-center justify-center text-amber-600 flex-shrink-0"><i class="fas fa-utensils"></i></div>
+                    <div class="w-10 h-10 rounded-lg bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-500 flex-shrink-0"><i class="fas fa-utensils"></i></div>
                     <div class="flex-1 min-w-0">
                         <div class="flex justify-between items-start gap-2">
                             <div class="font-bold text-stone-800 truncate">${escapeHtml(en.restaurante) || 'Sem nome'}</div>
@@ -440,14 +450,14 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-sto
             inputNome.placeholder = 'Nome do prato';
             inputNome.maxLength = 150;
             inputNome.value = nome;
-            inputNome.className = 'prato-nome flex-1 p-2 text-sm border border-stone-300 rounded-lg bg-stone-50 text-stone-800 focus:border-amber-500 outline-none transition';
+            inputNome.className = 'prato-nome flex-1 p-2 text-sm border border-rose-200 rounded-lg bg-rose-50/50 text-stone-800 focus:border-rose-400 outline-none transition';
 
             const inputNota = document.createElement('input');
             inputNota.type = 'text';
             inputNota.placeholder = 'Nota';
             inputNota.maxLength = 20;
             inputNota.value = nota;
-            inputNota.className = 'prato-nota w-20 p-2 text-sm border border-stone-300 rounded-lg bg-stone-50 text-stone-800 focus:border-amber-500 outline-none transition';
+            inputNota.className = 'prato-nota w-20 p-2 text-sm border border-rose-200 rounded-lg bg-rose-50/50 text-stone-800 focus:border-rose-400 outline-none transition';
             inputNota.addEventListener('input', () => applyNotaInputColor(inputNota));
             applyNotaInputColor(inputNota);
 
