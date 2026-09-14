@@ -119,12 +119,6 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-sla
                         <textarea id="f-obs" rows="3" class="w-full p-2.5 text-sm border border-slate-600 rounded-lg bg-slate-900 text-white focus:border-amber-500 outline-none transition"></textarea>
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wider">Fotos</label>
-                        <input type="file" id="f-fotos" accept="image/*" multiple capture="environment" class="text-xs text-slate-400 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-slate-700 file:text-amber-300 file:text-xs hover:file:bg-slate-600">
-                        <div id="fotos-preview" class="flex flex-wrap gap-2 mt-3"></div>
-                        <p id="foto-status" class="text-[11px] text-slate-500 mt-1 hidden">Enviando foto...</p>
-                    </div>
                 </div>
             </div>
 
@@ -142,7 +136,6 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-sla
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
         // =====================================================================
         // PREENCHA AQUI com a config do SEU projeto Firebase (Project settings
@@ -153,7 +146,6 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-sla
             apiKey: "COLE_AQUI",
             authDomain: "COLE_AQUI.firebaseapp.com",
             projectId: "COLE_AQUI",
-            storageBucket: "COLE_AQUI.firebasestorage.app",
             messagingSenderId: "COLE_AQUI",
             appId: "COLE_AQUI"
         };
@@ -161,13 +153,11 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-sla
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const storage = getStorage(app);
 
         let currentUser = null;
         let entries = [];
         let searchTerm = '';
         let draftId = null;      // id do registro sendo criado/editado no modal
-        let currentPhotos = [];  // urls já enviadas para o registro aberto no modal
         let isEditing = false;
 
         // SEGURANÇA: escapa qualquer valor antes de inseri-lo via innerHTML,
@@ -270,16 +260,13 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-sla
                     `<span class="bg-slate-900 border border-slate-700 text-slate-300 text-[11px] px-2 py-1 rounded-full">${escapeHtml(p.nome) || 'Prato'}${p.nota ? ' · ' + escapeHtml(p.nota) : ''}</span>`
                 ).join(' ');
                 const extra = pratos.length > 4 ? `<span class="text-[11px] text-slate-500">+${pratos.length - 4}</span>` : '';
-                const thumb = (Array.isArray(en.fotos) && en.fotos[0])
-                    ? `<img src="${escapeHtml(en.fotos[0])}" class="w-16 h-16 rounded-lg object-cover border border-slate-700 flex-shrink-0">`
-                    : `<div class="w-16 h-16 rounded-lg bg-slate-900 border border-slate-700 flex items-center justify-center text-slate-600 flex-shrink-0"><i class="fas fa-utensils"></i></div>`;
                 const dataFmt = en.data ? formatDateBR(en.data) : '';
 
                 const card = document.createElement('div');
                 card.className = "bg-slate-800 p-3 rounded-xl border border-slate-700 flex gap-3 cursor-pointer hover:border-amber-600 transition";
                 card.onclick = () => openEditModal(en.id);
                 card.innerHTML = `
-                    ${thumb}
+                    <div class="w-10 h-10 rounded-lg bg-slate-900 border border-slate-700 flex items-center justify-center text-amber-500/70 flex-shrink-0"><i class="fas fa-utensils"></i></div>
                     <div class="flex-1 min-w-0">
                         <div class="flex justify-between items-start gap-2">
                             <div class="font-bold text-white truncate">${escapeHtml(en.restaurante) || 'Sem nome'}</div>
@@ -392,86 +379,6 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-sla
 
         document.getElementById('btn-add-prato').addEventListener('click', () => addPratoRow());
 
-        // ===================== FOTOS =====================
-        const fotosPreview = document.getElementById('fotos-preview');
-        const fotoStatus = document.getElementById('foto-status');
-
-        const resizeImage = (file, maxDim = 1600, quality = 0.82) => new Promise((resolve, reject) => {
-            const img = new Image();
-            const url = URL.createObjectURL(file);
-            img.onload = () => {
-                let { width, height } = img;
-                if (width > maxDim || height > maxDim) {
-                    const ratio = Math.min(maxDim / width, maxDim / height);
-                    width = Math.round(width * ratio);
-                    height = Math.round(height * ratio);
-                }
-                const canvas = document.createElement('canvas');
-                canvas.width = width;
-                canvas.height = height;
-                canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-                canvas.toBlob((blob) => {
-                    URL.revokeObjectURL(url);
-                    blob ? resolve(blob) : reject(new Error('Falha ao processar imagem'));
-                }, 'image/jpeg', quality);
-            };
-            img.onerror = reject;
-            img.src = url;
-        });
-
-        const renderFotosPreview = () => {
-            fotosPreview.innerHTML = '';
-            currentPhotos.forEach((url, idx) => {
-                const wrap = document.createElement('div');
-                wrap.className = 'relative';
-                const img = document.createElement('img');
-                img.src = url;
-                img.className = 'w-16 h-16 object-cover rounded-lg border border-slate-700';
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.innerHTML = '<i class="fas fa-xmark"></i>';
-                btn.className = 'absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-600 text-white text-[10px] flex items-center justify-center';
-                btn.onclick = () => removePhoto(idx);
-                wrap.appendChild(img);
-                wrap.appendChild(btn);
-                fotosPreview.appendChild(wrap);
-            });
-        };
-
-        const removePhoto = async (idx) => {
-            const url = currentPhotos[idx];
-            currentPhotos.splice(idx, 1);
-            renderFotosPreview();
-            try {
-                const path = decodeURIComponent(new URL(url).pathname.split('/o/')[1].split('?')[0]);
-                await deleteObject(ref(storage, path));
-            } catch (err) {
-                console.warn('Não foi possível remover a foto do Storage:', err);
-            }
-        };
-
-        document.getElementById('f-fotos').addEventListener('change', async (e) => {
-            const files = Array.from(e.target.files || []);
-            if (!files.length || !draftId) return;
-            fotoStatus.classList.remove('hidden');
-            for (const file of files) {
-                try {
-                    const blob = await resizeImage(file);
-                    const path = `fotos/${draftId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
-                    const storageRef = ref(storage, path);
-                    await uploadBytes(storageRef, blob, { contentType: 'image/jpeg' });
-                    const url = await getDownloadURL(storageRef);
-                    currentPhotos.push(url);
-                    renderFotosPreview();
-                } catch (err) {
-                    console.error('Erro ao enviar foto:', err);
-                    alert('Não foi possível enviar uma das fotos.');
-                }
-            }
-            fotoStatus.classList.add('hidden');
-            e.target.value = '';
-        });
-
         // ===================== MODAL: ABRIR / FECHAR =====================
         const modal = document.getElementById('entry-modal');
         const btnDelete = document.getElementById('btn-delete-entry');
@@ -482,8 +389,6 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-sla
             document.getElementById('f-data').value = new Date().toISOString().slice(0, 10);
             document.getElementById('f-endereco').value = '';
             document.getElementById('f-obs').value = '';
-            currentPhotos = [];
-            renderFotosPreview();
             renderPratosRows([{ nome: '', nota: '' }]);
         };
 
@@ -508,8 +413,6 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-sla
             document.getElementById('f-data').value = en.data || '';
             document.getElementById('f-endereco').value = en.endereco || '';
             document.getElementById('f-obs').value = en.obs || '';
-            currentPhotos = Array.isArray(en.fotos) ? [...en.fotos] : [];
-            renderFotosPreview();
             renderPratosRows(Array.isArray(en.pratos) && en.pratos.length ? en.pratos : [{ nome: '', nota: '' }]);
             document.getElementById('modal-title').innerText = 'Editar Registro';
             btnDelete.classList.remove('hidden');
@@ -539,7 +442,6 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-sla
                 endereco: document.getElementById('f-endereco').value.trim(),
                 obs: document.getElementById('f-obs').value.trim(),
                 pratos,
-                fotos: currentPhotos,
                 criadoPorEmail: currentUser.email
             };
 
