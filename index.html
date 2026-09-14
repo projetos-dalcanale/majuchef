@@ -263,6 +263,19 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             } else {
                 currentUser = null;
                 if (unsubscribeSnapshot) { unsubscribeSnapshot(); unsubscribeSnapshot = null; }
+                // SEGURANÇA: limpa os dados e o estado da sessão anterior ao deslogar,
+                // para não deixar nenhum registro visível no DOM (nem por um instante)
+                // caso outra pessoa use o mesmo aparelho/navegador depois.
+                entries = [];
+                searchTerm = '';
+                filterTipo = '';
+                document.getElementById('search-input').value = '';
+                cardsList.innerHTML = '';
+                filterChipsEl.innerHTML = '';
+                filterChipsEl.classList.add('hidden');
+                filterChipsEl.classList.remove('flex');
+                emptyState.classList.add('hidden');
+                permissionError.classList.add('hidden');
                 loginScreen.classList.remove('hidden');
                 appDiv.classList.add('hidden');
                 btnOpenAdd.classList.add('hidden');
