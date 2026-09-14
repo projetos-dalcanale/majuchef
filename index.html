@@ -147,6 +147,26 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
         </div>
     </div>
 
+    <!-- MODAL DE PERFIL DO RESTAURANTE (histórico de visitas) -->
+    <div id="profile-modal" class="fixed inset-0 bg-stone-900/30 backdrop-blur-sm hidden items-center justify-center z-50 p-0 sm:p-4">
+        <div class="bg-white sm:rounded-2xl shadow-2xl w-full sm:max-w-lg h-full sm:h-auto sm:max-h-[92vh] flex flex-col border-0 sm:border border-rose-100 overflow-hidden">
+
+            <div class="bg-rose-50 p-4 border-b border-rose-100 flex justify-between items-start gap-2">
+                <div class="min-w-0">
+                    <h2 id="profile-title" class="font-display text-lg font-bold text-rose-700 truncate">Restaurante</h2>
+                    <div id="profile-subtitle" class="text-xs text-stone-500 mt-1.5 flex flex-wrap items-center gap-1"></div>
+                </div>
+                <button onclick="closeProfileModal()" class="text-stone-400 hover:text-rose-600 text-2xl leading-none transition flex-shrink-0">&times;</button>
+            </div>
+
+            <div id="profile-body" class="flex-1 overflow-y-auto p-5 space-y-2"></div>
+
+            <div class="p-4 border-t border-rose-100 bg-rose-50">
+                <button id="btn-profile-add-visit" type="button" class="w-full px-6 py-2.5 bg-rose-500 text-white font-bold rounded-lg shadow-lg shadow-rose-200/50 hover:bg-rose-400 transition text-sm"><i class="fas fa-plus mr-1"></i> Registrar nova visita aqui</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -175,6 +195,8 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
         let filterTipo = '';     // tipo de comida selecionado no filtro ('' = todos)
         let draftId = null;      // id do registro sendo criado/editado no modal
         let isEditing = false;
+        let profileRestaurantName = '';  // nome do restaurante aberto no perfil/histórico
+        let profileRestaurantTipo = '';
 
         // Tipos de comida disponíveis para cadastro e filtro
         const TIPOS_COMIDA = [
@@ -182,6 +204,10 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             'Poke', 'Chinesa', 'Mexicana', 'Churrascaria', 'Vegetariana/Vegana',
             'Francesa', 'Padaria/Cafeteria', 'Doceria/Sorveteria', 'Outro'
         ];
+
+        // Normaliza o nome do restaurante para agrupar visitas do mesmo lugar
+        // mesmo com pequenas diferenças de maiúsculas/espaços.
+        const normalizeName = (s) => (s || '').trim().toLowerCase();
 
         // Cor de acordo com a nota: < 5 vermelho, 5 a 7 laranja, 8 a 10 verde
         const notaBadgeClasses = (notaStr) => {
@@ -346,6 +372,15 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                 return;
             }
 
+            // Quantas vezes cada restaurante já foi registrado, pra só mostrar
+            // "Ver histórico" quando já existe mais de uma visita pra agrupar.
+            const visitCounts = {};
+            entries.forEach(en => {
+                const key = normalizeName(en.restaurante);
+                if (!key) return;
+                visitCounts[key] = (visitCounts[key] || 0) + 1;
+            });
+
             filtered.forEach(en => {
                 const pratos = Array.isArray(en.pratos) ? en.pratos : [];
                 const badges = pratos.slice(0, 4).map(p => {
@@ -354,10 +389,11 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                 }).join(' ');
                 const extra = pratos.length > 4 ? `<span class="text-[11px] text-stone-400">+${pratos.length - 4}</span>` : '';
                 const dataFmt = en.data ? formatDateBR(en.data) : '';
+                const visitCount = visitCounts[normalizeName(en.restaurante)] || 1;
 
                 const card = document.createElement('div');
-                card.className = "bg-white p-3 rounded-xl border border-rose-100 flex gap-3 cursor-pointer hover:border-rose-300 hover:shadow-md hover:shadow-rose-100 transition";
-                card.onclick = () => openEditModal(en.id);
+                card.className = "entry-card bg-white p-3 rounded-xl border border-rose-100 flex gap-3 cursor-pointer hover:border-rose-300 hover:shadow-md hover:shadow-rose-100 transition";
+                card.dataset.id = en.id;
                 card.innerHTML = `
                     <div class="w-10 h-10 rounded-lg bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-500 flex-shrink-0"><i class="fas fa-utensils"></i></div>
                     <div class="flex-1 min-w-0">
@@ -365,7 +401,10 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                             <div class="font-bold text-stone-800 truncate">${escapeHtml(en.restaurante) || 'Sem nome'}</div>
                             ${dataFmt ? `<div class="text-[11px] text-stone-400 whitespace-nowrap">${escapeHtml(dataFmt)}</div>` : ''}
                         </div>
-                        ${en.tipo ? `<span class="inline-block text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full mt-1">${escapeHtml(en.tipo)}</span>` : ''}
+                        <div class="flex flex-wrap items-center gap-1 mt-1">
+                            ${en.tipo ? `<span class="inline-block text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">${escapeHtml(en.tipo)}</span>` : ''}
+                            ${visitCount > 1 ? `<button type="button" class="profile-btn text-[10px] text-rose-500 hover:text-rose-700 font-semibold inline-flex items-center gap-1" data-restaurante="${escapeHtml(en.restaurante)}"><i class="fas fa-clock-rotate-left"></i> ${visitCount} visitas · ver histórico</button>` : ''}
+                        </div>
                         <div class="flex flex-wrap gap-1 mt-2">${badges}${extra}</div>
                     </div>
                 `;
@@ -373,11 +412,111 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             });
         };
 
+        // Um clique no card abre a visita específica; um clique no botão de
+        // histórico (dentro do card) abre o perfil do restaurante, sem também
+        // abrir a edição da visita.
+        cardsList.addEventListener('click', (e) => {
+            const profileBtn = e.target.closest('.profile-btn');
+            if (profileBtn) {
+                e.stopPropagation();
+                openProfileModal(profileBtn.dataset.restaurante);
+                return;
+            }
+            const card = e.target.closest('.entry-card');
+            if (card && card.dataset.id) {
+                openEditModal(card.dataset.id);
+            }
+        });
+
         const formatDateBR = (isoDate) => {
             const parts = isoDate.split('-');
             if (parts.length !== 3) return isoDate;
             return `${parts[2]}/${parts[1]}/${parts[0]}`;
         };
+
+        // ===================== PERFIL DO RESTAURANTE (histórico de visitas) =====================
+        // Junta todos os registros que têm o mesmo nome de restaurante (ignorando
+        // maiúsculas/espaços) pra montar um histórico com tudo que já foi provado lá.
+        const getRestaurantEntries = (name) => {
+            const norm = normalizeName(name);
+            return entries.filter(en => normalizeName(en.restaurante) === norm);
+        };
+
+        const profileModal = document.getElementById('profile-modal');
+        const profileTitleEl = document.getElementById('profile-title');
+        const profileSubtitleEl = document.getElementById('profile-subtitle');
+        const profileBodyEl = document.getElementById('profile-body');
+
+        window.openProfileModal = (restaurantName) => {
+            const visits = getRestaurantEntries(restaurantName)
+                .slice()
+                .sort((a, b) => (a.data || '').localeCompare(b.data || '') || (a.createdAt || '').localeCompare(b.createdAt || ''));
+            if (visits.length === 0) return;
+
+            profileRestaurantName = visits[visits.length - 1].restaurante || restaurantName;
+            const withTipo = [...visits].reverse().find(v => v.tipo);
+            profileRestaurantTipo = withTipo ? withTipo.tipo : '';
+
+            profileTitleEl.innerText = profileRestaurantName;
+
+            // Média de todas as notas numéricas dadas aos pratos, somando todas as visitas
+            const allNotas = [];
+            visits.forEach(v => (Array.isArray(v.pratos) ? v.pratos : []).forEach(p => {
+                const num = parseFloat(String(p.nota || '').trim().replace(',', '.'));
+                if (!isNaN(num)) allNotas.push(num);
+            }));
+            const avg = allNotas.length ? (allNotas.reduce((s, n) => s + n, 0) / allNotas.length) : null;
+            const avgCls = avg !== null ? notaBadgeClasses(avg) : 'bg-rose-50/60 border-rose-100 text-stone-600';
+            const avgTxt = avg !== null ? avg.toFixed(1).replace('.', ',') : '—';
+
+            profileSubtitleEl.innerHTML = `
+                ${profileRestaurantTipo ? `<span class="inline-block text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">${escapeHtml(profileRestaurantTipo)}</span>` : ''}
+                <span>${visits.length} visita${visits.length > 1 ? 's' : ''}</span>
+                <span class="${avgCls} border px-1.5 py-0.5 rounded-full font-semibold text-[11px]">média ${avgTxt}</span>
+            `;
+
+            profileBodyEl.innerHTML = visits.map(v => {
+                const pratos = Array.isArray(v.pratos) ? v.pratos : [];
+                const badges = pratos.map(p => {
+                    const cls = notaBadgeClasses(p.nota);
+                    return `<span class="${cls} border text-[11px] px-2 py-1 rounded-full">${escapeHtml(p.nome) || 'Prato'}${p.nota ? ' · ' + escapeHtml(p.nota) : ''}</span>`;
+                }).join(' ');
+                const dataFmt = v.data ? formatDateBR(v.data) : 'Sem data';
+                return `
+                    <button type="button" class="visit-item w-full text-left bg-rose-50/40 hover:bg-rose-50 border border-rose-100 rounded-xl p-3 transition" data-id="${escapeHtml(v.id)}">
+                        <div class="text-xs font-semibold text-stone-500 mb-1.5">${escapeHtml(dataFmt)}</div>
+                        <div class="flex flex-wrap gap-1">${badges || '<span class="text-xs text-stone-400">Sem pratos registrados</span>'}</div>
+                        ${v.obs ? `<div class="text-xs text-stone-500 mt-1.5 italic">${escapeHtml(v.obs)}</div>` : ''}
+                    </button>
+                `;
+            }).join('');
+
+            profileModal.classList.remove('hidden');
+            profileModal.classList.add('flex');
+        };
+
+        window.closeProfileModal = () => {
+            profileModal.classList.add('hidden');
+            profileModal.classList.remove('flex');
+        };
+
+        // Tocar numa visita dentro do perfil abre a edição daquele registro específico
+        profileBodyEl.addEventListener('click', (e) => {
+            const item = e.target.closest('.visit-item');
+            if (!item) return;
+            closeProfileModal();
+            openEditModal(item.dataset.id);
+        });
+
+        // Registrar uma nova visita a partir do perfil já preenche restaurante e tipo
+        document.getElementById('btn-profile-add-visit').addEventListener('click', () => {
+            const name = profileRestaurantName;
+            const tipo = profileRestaurantTipo;
+            closeProfileModal();
+            window.openAddModal();
+            document.getElementById('f-restaurante').value = name;
+            document.getElementById('f-tipo').value = tipo;
+        });
 
         // ===================== PARSER DE TEXTO (sem IA, baseado em padrão fixo) ====
         const parseText = (text) => {
