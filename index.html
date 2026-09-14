@@ -47,7 +47,7 @@
                 <h2 class="font-display text-2xl font-bold text-rose-700 dark:text-rose-400">MajuChef</h2>
                 <div class="w-10 h-0.5 bg-gradient-to-r from-transparent via-amber-300 to-transparent mt-2"></div>
             </div>
-            <p class="text-center text-stone-400 dark:text-stone-500 text-sm mb-6 mt-3 italic">Onde comemos, o que pedimos, o que achamos.</p>
+            <p class="text-center text-stone-400 dark:text-stone-500 text-sm mb-6 mt-3 italic">O diário de restaurantes do Matheus &amp; da Naju 💕</p>
             <form id="login-form" class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-stone-500 dark:text-stone-400 mb-1">E-mail</label>
@@ -67,7 +67,7 @@
     <!-- APP PRINCIPAL -->
     <div id="app" class="hidden max-w-md mx-auto min-h-screen flex flex-col pb-24">
         <header class="sticky top-0 z-30 bg-rose-50/95 dark:bg-stone-900/95 backdrop-blur-sm border-b border-amber-200/60 dark:border-stone-700 px-4 pt-4 pb-3">
-            <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center justify-between mb-1">
                 <h1 class="font-display text-lg font-bold text-rose-700 dark:text-rose-400 flex items-center"><span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-rose-500 text-white text-xs ring-2 ring-amber-300/80 mr-2"><i class="fas fa-utensils"></i></span>MajuChef</h1>
                 <div class="flex items-center gap-2.5">
                     <button id="btn-stats" title="Resumo" class="text-stone-400 hover:text-rose-600 dark:text-stone-500 dark:hover:text-rose-400 text-sm transition"><i class="fas fa-chart-pie"></i></button>
@@ -77,6 +77,7 @@
                     <button id="btn-logout" title="Sair" class="text-stone-400 hover:text-rose-600 dark:text-stone-500 dark:hover:text-rose-400 text-sm transition"><i class="fas fa-sign-out-alt"></i></button>
                 </div>
             </div>
+            <p id="greeting-text" class="text-xs text-stone-400 dark:text-stone-500 mb-3"></p>
             <input type="file" id="import-file-input" accept="application/json" class="hidden">
 
             <div class="flex gap-2 mb-3">
@@ -394,7 +395,26 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
         const wishlistListEl = document.getElementById('wishlist-list');
         const wishlistEmptyState = document.getElementById('wishlist-empty-state');
         const wishlistPermissionError = document.getElementById('wishlist-permission-error');
+        const greetingText = document.getElementById('greeting-text');
         let unsubscribeSnapshot = null;
+
+        // ===================== SAUDAÇÃO PERSONALIZADA =====================
+        // Só existem duas contas (a do Matheus e a da Naju, criadas manualmente
+        // no Firebase Console). O e-mail dele fica listado aqui; qualquer
+        // outro e-mail autorizado é tratado como sendo o dela.
+        const EMAIL_MATHEUS = 'matheusdfagundes2612@gmail.com';
+        const getFirstName = (email) => ((email || '').toLowerCase() === EMAIL_MATHEUS ? 'Matheus' : 'Naju');
+        const GREETINGS = [
+            'O que vamos comer hoje? 🍽️',
+            'Bora registrar o próximo lugar? 💕',
+            'Com fome de quê hoje?'
+        ];
+        const updateGreeting = (email) => {
+            if (!greetingText) return;
+            const nome = getFirstName(email);
+            const frase = GREETINGS[Math.floor(Math.random() * GREETINGS.length)];
+            greetingText.textContent = `Oi, ${nome}! ${frase}`;
+        };
 
         // ===================== TEMA CLARO/ESCURO =====================
         const applyThemeIcon = () => {
@@ -656,6 +676,7 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                 loginScreen.classList.add('hidden');
                 appDiv.classList.remove('hidden');
                 btnOpenAdd.classList.remove('hidden');
+                updateGreeting(user.email);
                 loadEntries();
                 loadWishlist();
             } else {
@@ -687,6 +708,7 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                 permissionError.classList.add('hidden');
                 wishlistEmptyState.classList.add('hidden');
                 wishlistPermissionError.classList.add('hidden');
+                if (greetingText) greetingText.textContent = '';
                 tabVisitados.className = TAB_ACTIVE_CLS;
                 tabDesejos.className = TAB_INACTIVE_CLS;
                 currentTab = 'visitados';
