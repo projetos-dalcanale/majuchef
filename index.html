@@ -71,6 +71,7 @@
                 <h1 class="font-display text-lg font-bold text-rose-700 dark:text-rose-400 flex items-center"><span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-rose-500 text-white text-xs ring-2 ring-amber-300/80 mr-2"><i class="fas fa-utensils"></i></span>MajuChef</h1>
                 <div class="flex items-center gap-2.5">
                     <button id="btn-stats" title="Resumo" class="text-stone-400 hover:text-rose-600 dark:text-stone-500 dark:hover:text-rose-400 text-sm transition"><i class="fas fa-chart-pie"></i></button>
+                    <button id="btn-surprise" title="Não sei onde comer" class="text-stone-400 hover:text-rose-600 dark:text-stone-500 dark:hover:text-rose-400 text-sm transition"><i class="fas fa-dice"></i></button>
                     <button id="btn-export" title="Exportar backup" class="text-stone-400 hover:text-rose-600 dark:text-stone-500 dark:hover:text-rose-400 text-sm transition"><i class="fas fa-download"></i></button>
                     <button id="btn-import" title="Importar backup" class="text-stone-400 hover:text-rose-600 dark:text-stone-500 dark:hover:text-rose-400 text-sm transition"><i class="fas fa-upload"></i></button>
                     <button id="btn-theme-toggle" title="Alternar tema" class="text-stone-400 hover:text-rose-600 dark:text-stone-500 dark:hover:text-rose-400 text-sm transition"><i id="theme-toggle-icon" class="fas fa-moon"></i></button>
@@ -178,6 +179,10 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                             <option value="$$$$">$$$$ · Muito caro</option>
                         </select>
                     </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1 uppercase tracking-wider">Endereço ou link do Google Maps (opcional)</label>
+                        <input type="text" id="f-endereco" placeholder="Cole o link do Google Maps ou digite o endereço" class="w-full p-2.5 text-sm border border-rose-200 dark:border-stone-600 rounded-lg bg-rose-50/50 dark:bg-stone-900/60 text-stone-800 dark:text-stone-100 focus:border-rose-400 outline-none transition">
+                    </div>
 
                     <div>
                         <div class="flex justify-between items-center mb-2">
@@ -283,6 +288,24 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                 <button onclick="closeStatsModal()" class="text-stone-400 hover:text-rose-600 dark:text-stone-500 dark:hover:text-rose-400 text-2xl leading-none transition">&times;</button>
             </div>
             <div id="stats-body" class="p-5 space-y-2 overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <!-- MODAL "NÃO SEI ONDE COMER" (sorteia um item da lista de desejos) -->
+    <div id="surprise-modal" class="fixed inset-0 bg-stone-900/30 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-stone-800 rounded-2xl shadow-2xl w-full max-w-sm border border-rose-100 dark:border-stone-700 overflow-hidden">
+            <div class="bg-rose-50 dark:bg-stone-800 p-4 border-b border-rose-100 dark:border-stone-700 flex justify-between items-center">
+                <h2 class="font-display text-lg font-bold text-rose-700 dark:text-rose-400"><i class="fas fa-dice mr-1 text-amber-500"></i> Não sei onde comer</h2>
+                <button onclick="closeSurpriseModal()" class="text-stone-400 hover:text-rose-600 dark:text-stone-500 dark:hover:text-rose-400 text-2xl leading-none transition">&times;</button>
+            </div>
+            <div class="p-6 text-center">
+                <div id="surprise-nome" class="font-display text-2xl font-bold text-rose-700 dark:text-rose-400 mb-2"></div>
+                <div id="surprise-motivo" class="text-sm text-stone-500 dark:text-stone-400"></div>
+            </div>
+            <div class="p-4 border-t border-rose-100 dark:border-stone-700 bg-rose-50 dark:bg-stone-800 space-y-2">
+                <button type="button" id="btn-surprise-again" class="w-full px-6 py-2.5 bg-white dark:bg-stone-700 border border-rose-200 dark:border-stone-600 text-rose-600 dark:text-rose-400 font-bold rounded-lg hover:bg-rose-50 dark:hover:bg-stone-600 transition text-sm"><i class="fas fa-shuffle mr-1"></i> Sortear de novo</button>
+                <button type="button" id="btn-surprise-visit" class="w-full px-6 py-2.5 bg-rose-500 text-white font-bold rounded-lg shadow-lg shadow-rose-200/50 hover:bg-rose-400 transition text-sm"><i class="fas fa-utensils mr-1"></i> Vamos lá! Registrar visita</button>
+            </div>
         </div>
     </div>
 
@@ -411,6 +434,16 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#39;');
+        };
+
+        // Monta uma URL do Google Maps a partir do que a pessoa colou: se já for
+        // um link, usa direto; se for um endereço em texto, monta uma busca.
+        const getMapsUrl = (endereco) => {
+            if (!endereco) return '';
+            const trimmed = endereco.trim();
+            if (!trimmed) return '';
+            if (/^https?:\/\//i.test(trimmed)) return trimmed;
+            return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(trimmed)}`;
         };
 
         const loginScreen = document.getElementById('login-screen');
@@ -564,6 +597,7 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             texto += '\n';
             if (linhas.length) texto += '\n' + linhas.join('\n') + '\n';
             if (en.obs) texto += `\n"${en.obs}"\n`;
+            if (en.endereco) texto += `\n📍 ${getMapsUrl(en.endereco)}\n`;
             texto += '\nRecomendado pelo MajuChef 💕';
 
             if (navigator.share) {
@@ -878,6 +912,7 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                         <div class="flex flex-wrap items-center gap-1 mt-1">
                             ${en.tipo ? `<span class="inline-block text-[10px] font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 px-2 py-0.5 rounded-full">${escapeHtml(en.tipo)}</span>` : ''}
                             ${en.preco ? `<span class="inline-block text-[10px] font-semibold text-stone-500 dark:text-stone-400 bg-stone-100 dark:bg-stone-900/60 border border-stone-200 dark:border-stone-600 px-2 py-0.5 rounded-full">${escapeHtml(en.preco)}</span>` : ''}
+                            ${en.endereco ? `<a href="${escapeHtml(getMapsUrl(en.endereco))}" target="_blank" rel="noopener" class="maps-link text-[10px] text-stone-400 dark:text-stone-500 hover:text-rose-600 dark:hover:text-rose-400 font-semibold inline-flex items-center gap-1"><i class="fas fa-location-dot"></i> Ver no mapa</a>` : ''}
                             ${visitCount > 1 ? `<button type="button" class="profile-btn text-[10px] text-rose-500 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 font-semibold inline-flex items-center gap-1" data-restaurante="${escapeHtml(en.restaurante)}"><i class="fas fa-clock-rotate-left"></i> ${visitCount} visitas · ver histórico</button>` : ''}
                             <button type="button" class="share-btn text-[10px] text-stone-400 dark:text-stone-500 hover:text-rose-600 dark:hover:text-rose-400 font-semibold inline-flex items-center gap-1" data-id="${escapeHtml(en.id)}" title="Compartilhar recomendação"><i class="fas fa-share-nodes"></i></button>
                         </div>
@@ -899,6 +934,11 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                 const en = entries.find(x => x.id === thumbEl.dataset.id);
                 if (en && Array.isArray(en.fotos) && en.fotos.length) window.openPhotoViewer(en.fotos, 0);
                 return;
+            }
+            const mapsLink = e.target.closest('.maps-link');
+            if (mapsLink) {
+                e.stopPropagation();
+                return; // deixa o link abrir o mapa numa nova aba normalmente
             }
             const favBtn = e.target.closest('.favorito-btn');
             if (favBtn) {
@@ -1177,6 +1217,43 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             }
         });
 
+        // ===================== "NÃO SEI ONDE COMER" (sorteia um item da lista de desejos) =====================
+        const surpriseModal = document.getElementById('surprise-modal');
+        let surpriseCurrentId = null;
+
+        // Escolhe um item aleatório da lista de desejos e preenche o modal.
+        // Retorna false (sem abrir/sortear nada) se a lista estiver vazia.
+        const pickSurprise = () => {
+            if (!wishlist.length) {
+                alert('Sua lista de desejos está vazia. Adicione um lugar que vocês querem experimentar primeiro!');
+                return false;
+            }
+            const w = wishlist[Math.floor(Math.random() * wishlist.length)];
+            surpriseCurrentId = w.id;
+            document.getElementById('surprise-nome').innerText = w.nome || 'Sem nome';
+            document.getElementById('surprise-motivo').innerText = w.motivo || '';
+            return true;
+        };
+
+        document.getElementById('btn-surprise').addEventListener('click', () => {
+            if (!pickSurprise()) return;
+            surpriseModal.classList.remove('hidden');
+            surpriseModal.classList.add('flex');
+        });
+
+        document.getElementById('btn-surprise-again').addEventListener('click', () => pickSurprise());
+
+        window.closeSurpriseModal = () => {
+            surpriseModal.classList.add('hidden');
+            surpriseModal.classList.remove('flex');
+        };
+
+        document.getElementById('btn-surprise-visit').addEventListener('click', () => {
+            if (!surpriseCurrentId) return;
+            window.closeSurpriseModal();
+            goVisitWishlistItem(surpriseCurrentId);
+        });
+
         // ===================== RESUMO / ESTATÍSTICAS =====================
         const statsModal = document.getElementById('stats-modal');
         const statsBodyEl = document.getElementById('stats-body');
@@ -1449,6 +1526,7 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             document.getElementById('f-tipo').value = '';
             document.getElementById('f-data').value = new Date().toISOString().slice(0, 10);
             document.getElementById('f-preco').value = '';
+            document.getElementById('f-endereco').value = '';
             document.getElementById('f-tags').value = '';
             document.getElementById('f-obs').value = '';
             document.getElementById('f-favorito').checked = false;
@@ -1482,6 +1560,7 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             document.getElementById('f-tipo').value = en.tipo || '';
             document.getElementById('f-data').value = en.data || '';
             document.getElementById('f-preco').value = en.preco || '';
+            document.getElementById('f-endereco').value = en.endereco || '';
             document.getElementById('f-tags').value = Array.isArray(en.tags) ? en.tags.join(', ') : '';
             document.getElementById('f-obs').value = en.obs || '';
             document.getElementById('f-favorito').checked = !!en.favorito;
@@ -1534,6 +1613,7 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                     tipo: document.getElementById('f-tipo').value || '',
                     data: document.getElementById('f-data').value || '',
                     preco: document.getElementById('f-preco').value || '',
+                    endereco: document.getElementById('f-endereco').value.trim(),
                     obs: document.getElementById('f-obs').value.trim(),
                     pratos,
                     tags,
