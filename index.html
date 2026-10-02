@@ -374,10 +374,37 @@
         .stat-wide { grid-column: span 2; }
         .stat-value.sm { font-size: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        .surprise { text-align: center; padding: 10px 0 6px; }
-        .surprise .empty-icon { margin-bottom: 16px; }
-        .surprise-nome { font-family: var(--font-display); font-size: 30px; font-weight: 700; line-height: 1.15; color: var(--accent-ink); margin-bottom: 8px; }
+        /* ===================== ROLETA ("não sei onde comer") ===================== */
+        .wheel-stage { position: relative; width: min(300px, 78vw); aspect-ratio: 1; margin: 18px auto 6px; }
+        .wheel-wrap {
+            width: 100%; height: 100%; border-radius: 50%; padding: 7px; background: var(--surface);
+            box-shadow: 0 0 0 3px var(--accent), 0 18px 40px -16px rgba(0, 0, 0, .4);
+        }
+        .wheel-wrap canvas { display: block; width: 100%; height: 100%; border-radius: 50%; will-change: transform; }
+        .wheel-pointer {
+            position: absolute; top: -12px; left: 50%; transform: translateX(-50%); z-index: 3; width: 0; height: 0;
+            border-left: 14px solid transparent; border-right: 14px solid transparent; border-top: 26px solid var(--text);
+            filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .35));
+        }
+        .wheel-hub {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2; width: 30%; aspect-ratio: 1;
+            border-radius: 50%; background: var(--surface); color: var(--accent-ink); font-weight: 700; font-size: 14px; letter-spacing: .02em;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, .3), 0 0 0 4px var(--rose-soft); transition: transform .1s;
+        }
+        .wheel-hub:active { transform: translate(-50%, -50%) scale(.94); }
+        .wheel-hub:disabled { cursor: default; opacity: .85; }
+        .wheel-hint { text-align: center; color: var(--muted); font-size: 13px; margin-top: 16px; min-height: 18px; }
+        .surprise-result { text-align: center; padding: 8px 0 4px; animation: pop-in .55s cubic-bezier(.2, 1.4, .4, 1) both; }
+        .surprise-result .pill { margin-bottom: 10px; }
+        .surprise-nome { font-family: var(--font-display); font-size: 30px; font-weight: 700; line-height: 1.15; color: var(--accent-ink); margin-bottom: 8px; word-break: break-word; }
         .surprise-motivo { color: var(--muted); }
+        .confetti { position: absolute; inset: 0; pointer-events: none; z-index: 4; }
+        .confetti span { position: absolute; top: 50%; left: 50%; width: 8px; height: 13px; border-radius: 2px; animation: confetti-fly 1.5s cubic-bezier(.1, .8, .3, 1) forwards; }
+        @keyframes confetti-fly {
+            from { transform: translate(-50%, -50%) rotate(0); opacity: 1; }
+            to { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(var(--rot)); opacity: 0; }
+        }
+        @keyframes pop-in { from { opacity: 0; transform: scale(.85) translateY(10px); } }
         .stack { display: flex; flex-direction: column; gap: 10px; width: 100%; }
 
         .visit-item { display: block; width: 100%; text-align: left; background: var(--fill); border-radius: 20px; padding: 14px; }
@@ -700,24 +727,31 @@ Obs: comentário livre"></textarea>
         </div>
     </div>
 
-    <!-- "NÃO SEI ONDE COMER" -->
+    <!-- "NÃO SEI ONDE COMER" (roleta) -->
     <div id="surprise-modal" class="sheet-root hidden" data-close="closeSurpriseModal">
-        <div class="sheet" role="dialog" aria-modal="true" aria-label="Não sei onde comer">
+        <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="surprise-title">
             <div class="sheet-grabber"></div>
             <div class="sheet-head">
-                <h2 class="sheet-title">Hoje vai ser…</h2>
+                <h2 id="surprise-title" class="sheet-title">Não sei onde comer</h2>
                 <button type="button" class="icon-btn" onclick="closeSurpriseModal()" aria-label="Fechar"><i class="fas fa-xmark"></i></button>
             </div>
             <div class="sheet-body">
-                <div class="surprise">
-                    <div class="empty-icon"><i class="fas fa-dice"></i></div>
+                <div class="wheel-stage">
+                    <div class="wheel-pointer"></div>
+                    <div class="wheel-wrap"><canvas id="wheel-canvas" width="300" height="300" aria-hidden="true"></canvas></div>
+                    <button type="button" id="btn-wheel-spin" class="wheel-hub" aria-label="Girar a roleta">GIRAR</button>
+                    <div id="confetti" class="confetti" aria-hidden="true"></div>
+                </div>
+                <p id="wheel-hint" class="wheel-hint"></p>
+                <div id="surprise-result" class="surprise-result hidden" aria-live="polite">
+                    <span class="pill amber"><i class="fas fa-star" style="margin-right:6px;font-size:10px"></i>Sorteado!</span>
                     <div id="surprise-nome" class="surprise-nome"></div>
                     <div id="surprise-motivo" class="surprise-motivo"></div>
                 </div>
             </div>
             <div class="sheet-foot" style="flex-direction:column">
-                <button type="button" id="btn-surprise-visit" class="btn btn-primary"><i class="fas fa-utensils"></i>Vamos lá! Registrar visita</button>
-                <button type="button" id="btn-surprise-again" class="btn btn-ghost"><i class="fas fa-shuffle"></i>Sortear de novo</button>
+                <button type="button" id="btn-surprise-visit" class="btn btn-primary hidden"><i class="fas fa-utensils"></i>Vamos lá! Registrar visita</button>
+                <button type="button" id="btn-surprise-again" class="btn btn-ghost"><i class="fas fa-rotate"></i>Girar a roleta</button>
             </div>
         </div>
     </div>
@@ -1771,41 +1805,202 @@ Obs: comentário livre"></textarea>
             }
         });
 
-        // ===================== "NÃO SEI ONDE COMER" (sorteia um item da lista de desejos) =====================
+        // ===================== "NÃO SEI ONDE COMER" (roleta com a lista de desejos) =====================
         const surpriseModal = document.getElementById('surprise-modal');
-        let surpriseCurrentId = null;
+        const wheelCanvas = document.getElementById('wheel-canvas');
+        const wheelSpinBtn = document.getElementById('btn-wheel-spin');
+        const wheelHint = document.getElementById('wheel-hint');
+        const surpriseResult = document.getElementById('surprise-result');
+        const surpriseVisitBtn = document.getElementById('btn-surprise-visit');
+        const surpriseAgainBtn = document.getElementById('btn-surprise-again');
+        const confettiEl = document.getElementById('confetti');
 
-        // Escolhe um item aleatório da lista de desejos e preenche o modal.
-        // Retorna false (sem abrir/sortear nada) se a lista estiver vazia.
-        const pickSurprise = () => {
-            if (!wishlist.length) {
-                alert('Sua lista de desejos está vazia. Adicione um lugar que vocês querem experimentar primeiro!');
-                return false;
+        const WHEEL_COLORS = ['#e11d48', '#d97706', '#be123c', '#ea580c', '#9f1239', '#b45309'];
+        const WHEEL_MAX = 10;        // máximo de fatias na roda (com mais que isso, sorteamos entre uma amostra)
+        const WHEEL_SPIN_MS = 5200;
+        let surpriseCurrentId = null;
+        let wheelItems = [];         // itens que estão na roda agora
+        let wheelRotation = 0;       // rotação acumulada da roda, em graus
+        let wheelSpinning = false;
+        let wheelToken = 0;          // invalida giros antigos (ex.: fechou o modal no meio do giro)
+
+        const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // Escolhe os lugares que entram na roda (todos, ou uma amostra aleatória se forem muitos)
+        const pickWheelItems = () => {
+            const pool = wishlist.slice();
+            for (let i = pool.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [pool[i], pool[j]] = [pool[j], pool[i]];
             }
-            const w = wishlist[Math.floor(Math.random() * wishlist.length)];
-            surpriseCurrentId = w.id;
-            document.getElementById('surprise-nome').innerText = w.nome || 'Sem nome';
-            document.getElementById('surprise-motivo').innerText = w.motivo || '';
-            return true;
+            return pool.slice(0, WHEEL_MAX);
+        };
+
+        const drawWheel = () => {
+            const size = 300;
+            const dpr = Math.min(window.devicePixelRatio || 1, 3);
+            wheelCanvas.width = size * dpr;
+            wheelCanvas.height = size * dpr;
+            const ctx = wheelCanvas.getContext('2d');
+            ctx.scale(dpr, dpr);
+            const n = wheelItems.length;
+            const c = size / 2;
+            const slice = (Math.PI * 2) / n;
+            const fontSize = n <= 5 ? 17 : n <= 8 ? 14 : 12;
+            wheelItems.forEach((item, i) => {
+                const start = -Math.PI / 2 + i * slice;
+                let color = WHEEL_COLORS[i % WHEEL_COLORS.length];
+                if (i === n - 1 && n > 1 && n % WHEEL_COLORS.length === 1) color = WHEEL_COLORS[3]; // não repete a cor da 1ª fatia
+                ctx.beginPath();
+                ctx.moveTo(c, c);
+                ctx.arc(c, c, c, start, start + slice);
+                ctx.closePath();
+                ctx.fillStyle = color;
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(255,255,255,.4)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // nome ao longo do raio, cortado com "…" se não couber
+                ctx.save();
+                ctx.translate(c, c);
+                ctx.rotate(start + slice / 2);
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#fff';
+                ctx.font = `600 ${fontSize}px 'Plus Jakarta Sans', system-ui, sans-serif`;
+                const maxWidth = c * 0.54;
+                const full = item.nome || 'Sem nome';
+                let label = full;
+                while (label.length > 1 && ctx.measureText(label).width > maxWidth) label = label.slice(0, -1);
+                if (label !== full) label = label.trimEnd() + '…';
+                ctx.fillText(label, c - 14, 0);
+                ctx.restore();
+            });
+        };
+
+        const resetWheelRotation = () => {
+            wheelRotation = 0;
+            wheelCanvas.style.transition = 'none';
+            wheelCanvas.style.transform = 'rotate(0deg)';
+            void wheelCanvas.offsetWidth;
+        };
+
+        const setSpinning = (on) => {
+            wheelSpinning = on;
+            wheelSpinBtn.disabled = on;
+            surpriseAgainBtn.disabled = on;
+            surpriseVisitBtn.disabled = on;
+        };
+
+        const burstConfetti = () => {
+            if (prefersReducedMotion()) return;
+            const colors = ['#f43f5e', '#f59e0b', '#fbbf24', '#fb7185', '#34d399', '#ffffff'];
+            confettiEl.innerHTML = '';
+            for (let i = 0; i < 44; i++) {
+                const p = document.createElement('span');
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 90 + Math.random() * 150;
+                p.style.background = colors[i % colors.length];
+                p.style.setProperty('--dx', `${Math.cos(angle) * dist}px`);
+                p.style.setProperty('--dy', `${Math.sin(angle) * dist - 40}px`);
+                p.style.setProperty('--rot', `${(Math.random() * 720 - 360) | 0}deg`);
+                p.style.animationDelay = `${Math.random() * 120}ms`;
+                confettiEl.appendChild(p);
+            }
+            setTimeout(() => { confettiEl.innerHTML = ''; }, 1800);
+        };
+
+        const showSurpriseResult = (item) => {
+            surpriseCurrentId = item.id;
+            document.getElementById('surprise-nome').innerText = item.nome || 'Sem nome';
+            document.getElementById('surprise-motivo').innerText = item.motivo || '';
+            surpriseResult.classList.add('hidden');
+            void surpriseResult.offsetWidth;
+            surpriseResult.classList.remove('hidden');
+            surpriseVisitBtn.classList.remove('hidden');
+            surpriseAgainBtn.innerHTML = '<i class="fas fa-rotate"></i>Girar de novo';
+            wheelHint.textContent = '';
+            burstConfetti();
+            if (navigator.vibrate) navigator.vibrate([40, 50, 90]);
+            surpriseResult.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'nearest' });
+        };
+
+        const spinWheel = () => {
+            if (wheelSpinning) return;
+            if (!wishlist.length) { alert('Sua lista de desejos está vazia. Adicione um lugar que vocês querem experimentar primeiro!'); return; }
+
+            // com muitos lugares, cada giro sorteia uma nova amostra de fatias
+            if (!wheelItems.length || wishlist.length > WHEEL_MAX) {
+                wheelItems = pickWheelItems();
+                resetWheelRotation();
+                drawWheel();
+            }
+            setSpinning(true);
+            surpriseResult.classList.add('hidden');
+            surpriseVisitBtn.classList.add('hidden');
+            wheelHint.textContent = 'Girando…';
+            confettiEl.innerHTML = '';
+
+            const n = wheelItems.length;
+            const sliceDeg = 360 / n;
+            const winner = Math.floor(Math.random() * n);
+            // a fatia vencedora precisa parar embaixo do ponteiro (topo); o desvio aleatório evita parar sempre no centro dela
+            const jitter = (Math.random() * 0.76 - 0.38) * sliceDeg;
+            const target = (((-(winner + 0.5) * sliceDeg + jitter) % 360) + 360) % 360;
+            const current = ((wheelRotation % 360) + 360) % 360;
+            const delta = (((target - current) % 360) + 360) % 360;
+            const reduce = prefersReducedMotion();
+            const duration = reduce ? 0 : WHEEL_SPIN_MS;
+            wheelRotation += (reduce ? 0 : 5 * 360) + delta;
+            wheelCanvas.style.transition = reduce ? 'none' : `transform ${duration}ms cubic-bezier(.12, .72, .12, 1)`;
+            wheelCanvas.style.transform = `rotate(${wheelRotation}deg)`;
+
+            const token = ++wheelToken;
+            setTimeout(() => {
+                if (token !== wheelToken) return;
+                setSpinning(false);
+                showSurpriseResult(wheelItems[winner]);
+            }, duration + 120);
         };
 
         document.getElementById('btn-surprise').addEventListener('click', () => {
-            if (!pickSurprise()) return;
+            if (!wishlist.length) {
+                alert('Sua lista de desejos está vazia. Adicione um lugar que vocês querem experimentar primeiro!');
+                return;
+            }
+            wheelToken++;
+            setSpinning(false);
+            wheelItems = pickWheelItems();
+            resetWheelRotation();
+            drawWheel();
+            surpriseCurrentId = null;
+            surpriseResult.classList.add('hidden');
+            surpriseVisitBtn.classList.add('hidden');
+            surpriseAgainBtn.innerHTML = '<i class="fas fa-rotate"></i>Girar a roleta';
+            confettiEl.innerHTML = '';
+            wheelHint.textContent = wishlist.length > WHEEL_MAX
+                ? `Toque em girar · sorteando entre ${WHEEL_MAX} de ${wishlist.length} lugares da lista`
+                : 'Toque em girar e deixe a sorte decidir';
             surpriseModal.classList.remove('hidden');
             surpriseModal.classList.add('flex');
         });
 
-        document.getElementById('btn-surprise-again').addEventListener('click', () => pickSurprise());
+        wheelSpinBtn.addEventListener('click', spinWheel);
+        surpriseAgainBtn.addEventListener('click', spinWheel);
 
         window.closeSurpriseModal = () => {
+            wheelToken++; // cancela um giro em andamento
+            setSpinning(false);
             surpriseModal.classList.add('hidden');
             surpriseModal.classList.remove('flex');
         };
 
-        document.getElementById('btn-surprise-visit').addEventListener('click', () => {
+        surpriseVisitBtn.addEventListener('click', () => {
             if (!surpriseCurrentId) return;
+            const id = surpriseCurrentId;
             window.closeSurpriseModal();
-            goVisitWishlistItem(surpriseCurrentId);
+            goVisitWishlistItem(id);
         });
 
         // ===================== RESUMO / ESTATÍSTICAS =====================
