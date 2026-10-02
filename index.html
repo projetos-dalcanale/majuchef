@@ -131,6 +131,14 @@
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%23a8a09b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E");
             background-repeat: no-repeat; background-position: right 14px center;
         }
+        /* Safari do iPhone ignora o estilo do campo de data (fica mais alto, centralizado e invade a coluna ao lado) */
+        input[type="date"].input {
+            -webkit-appearance: none; appearance: none; display: block; height: 48px; min-width: 0;
+            text-align: left; line-height: 24px; padding-top: 0; padding-bottom: 0;
+        }
+        input[type="date"].input::-webkit-date-and-time-value { text-align: left; min-height: 24px; margin: 0; }
+        input[type="date"].input::-webkit-datetime-edit { padding: 0; }
+        .field-row > .field { min-width: 0; }
         .field + .field { margin-top: 16px; }
         .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
         .field-row .field + .field { margin-top: 0; }
