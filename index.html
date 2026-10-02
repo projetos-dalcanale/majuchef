@@ -14,7 +14,8 @@
 
     <!-- Ícone usado ao "Adicionar à Tela de Início" no iPhone, e também como favicon -->
     <link rel="apple-touch-icon" href="icon-180.png">
-    <link rel="icon" href="icon-180.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="manifest" href="manifest.webmanifest">
 
     <script>
         // Aplica o tema salvo antes da página desenhar, pra não "piscar" claro e depois escuro.
@@ -106,11 +107,8 @@
             background: radial-gradient(120% 55% at 50% 0%, var(--rose-soft), transparent 70%), var(--bg);
         }
         .login-box { width: 100%; max-width: 360px; text-align: center; }
-        .brand-mark {
-            display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 11px;
-            background: var(--accent); color: #fff; font-size: 15px;
-        }
-        .brand-mark.lg { width: 72px; height: 72px; border-radius: 24px; font-size: 30px; box-shadow: 0 14px 30px -12px var(--accent); }
+        .brand-img { display: block; width: 34px; height: 34px; border-radius: 11px; }
+        .brand-img.lg { width: 84px; height: 84px; border-radius: 27px; margin: 0 auto; box-shadow: 0 16px 32px -12px var(--accent); }
         .login h1 { font-family: var(--font-display); font-size: 36px; font-weight: 700; margin-top: 18px; letter-spacing: -.01em; }
         .login .tagline { color: var(--muted); margin: 6px 0 28px; }
         .login form { display: flex; flex-direction: column; gap: 12px; text-align: left; }
@@ -405,6 +403,46 @@
             opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; white-space: nowrap; max-width: 90vw;
         }
         .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+        /* ===================== FOTOS (capa, carregamento suave) ===================== */
+        .lazy-img { opacity: 0; transition: opacity .35s ease; }
+        .lazy-img.loaded { opacity: 1; }
+        .cover {
+            position: relative; display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden;
+            margin-bottom: 12px; background: var(--fill); cursor: zoom-in;
+        }
+        .cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+        .cover::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 55%, rgba(0, 0, 0, .28)); pointer-events: none; }
+        .cover .thumb-count { z-index: 1; right: 10px; bottom: 10px; display: inline-flex; align-items: center; gap: 5px; font-size: 11px; padding: 3px 8px; border-radius: 999px; }
+
+        /* ===================== CARREGANDO (esqueleto) ===================== */
+        .skel-box, .skel-line {
+            background: linear-gradient(90deg, var(--fill) 25%, var(--fill-2) 50%, var(--fill) 75%);
+            background-size: 200% 100%; animation: shimmer 1.3s linear infinite;
+        }
+        .skel-line { height: 12px; border-radius: 6px; }
+        .skel-line + .skel-line { margin-top: 10px; }
+        .skel-line.w60 { width: 60%; height: 16px; }
+        .skel-line.w40 { width: 40%; }
+        .card.skel { cursor: default; box-shadow: none; }
+        .score-sk { width: 48px; height: 48px; border-radius: 16px; flex: none; }
+        @keyframes shimmer { to { background-position: -200% 0; } }
+
+        /* ===================== MOVIMENTO ===================== */
+        .card.enter { animation: card-in .45s cubic-bezier(.2, .8, .2, 1) both; }
+        .view-in { animation: view-in .3s cubic-bezier(.2, .8, .2, 1) both; }
+        .icon-btn.pop i { animation: heart-pop .5s cubic-bezier(.3, 1.7, .5, 1); }
+        @keyframes card-in { from { opacity: 0; transform: translateY(14px) scale(.98); } }
+        @keyframes view-in { from { opacity: 0; transform: translateY(8px); } }
+        @keyframes heart-pop { 0% { transform: scale(.6); } 55% { transform: scale(1.5); } 100% { transform: scale(1); } }
+
+        /* ===================== SEM INTERNET ===================== */
+        .offline-bar {
+            position: fixed; top: calc(8px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 90;
+            display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; white-space: nowrap;
+            background: var(--amber-soft); color: var(--amber); font-size: 12.5px; font-weight: 600;
+            border: 1px solid var(--line); box-shadow: var(--shadow); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+        }
     </style>
 </head>
 <body>
@@ -412,7 +450,7 @@
     <!-- TELA DE LOGIN -->
     <div id="login-screen" class="login">
         <div class="login-box">
-            <span class="brand-mark lg"><i class="fas fa-utensils"></i></span>
+            <img class="brand-img lg" src="icon-192.png" alt="">
             <h1>MajuChef</h1>
             <p class="tagline">O diário de restaurantes do Matheus &amp; da Naju</p>
             <form id="login-form">
@@ -434,7 +472,7 @@
     <div id="app" class="hidden">
         <header class="top">
             <div class="top-row">
-                <div class="brand"><span class="brand-mark"><i class="fas fa-utensils"></i></span>MajuChef</div>
+                <div class="brand"><img class="brand-img" src="icon-192.png" alt="">MajuChef</div>
                 <button id="btn-menu" class="avatar" aria-label="Abrir menu"><span id="avatar-initial">M</span></button>
             </div>
             <h1 id="page-title" class="page-title">Visitados</h1>
@@ -693,12 +731,13 @@ Obs: comentário livre"></textarea>
         <div id="photo-viewer-count" class="v-count"></div>
     </div>
 
+    <div id="offline-bar" class="offline-bar hidden" role="status"><i class="fas fa-wifi"></i>Sem internet · mostrando dados salvos</div>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         // =====================================================================
         // Config do projeto Firebase (Project settings -> General -> Your apps).
@@ -713,7 +752,15 @@ Obs: comentário livre"></textarea>
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const db = getFirestore(app);
+        // Cache offline: o Firestore guarda uma cópia dos dados no aparelho, então o app abre
+        // e mostra os registros mesmo sem internet (e sincroniza quando a conexão voltar).
+        let db;
+        try {
+            db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
+        } catch (err) {
+            console.warn('Cache offline indisponível, usando modo normal:', err);
+            db = getFirestore(app);
+        }
 
         // =====================================================================
         // Cloudinary: guarda as fotos dos registros fora do Firestore, sem
@@ -755,6 +802,10 @@ Obs: comentário livre"></textarea>
         let pendingWishId = null;        // desejo que só sai da lista quando a visita for realmente salva
         let unsubscribeWishlistSnapshot = null;
         let unsubscribeSnapshot = null;
+        let entriesLoaded = false;       // false até chegar a primeira resposta do Firestore (mostra o esqueleto)
+        let wishlistLoaded = false;
+        const seenCardIds = new Set();   // cards que já apareceram (só os novos ganham animação de entrada)
+        const justFavorited = new Set(); // cards que acabaram de ser favoritados (coração "pulsa")
 
         // Tipos de comida disponíveis para cadastro e filtro
         const TIPOS_COMIDA = [
@@ -819,6 +870,44 @@ Obs: comentário livre"></textarea>
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#39;');
+        };
+
+        // ===================== FOTOS (Cloudinary) =====================
+        // Pede ao Cloudinary uma versão do tamanho certo (bem mais leve que a foto original) e em
+        // formato moderno (f_auto também converte HEIC pra algo que qualquer navegador mostra).
+        // Se a transformação falhar por qualquer motivo, a imagem cai de volta para a original.
+        const IMG_COVER = 'c_fill,g_auto,w_720,h_405,q_auto,f_auto';
+        const IMG_THUMB = 'c_fill,g_auto,w_160,h_160,q_auto,f_auto';
+        const IMG_FULL = 'c_limit,w_1600,q_auto,f_auto';
+        const cld = (url, transform) => {
+            if (typeof url !== 'string' || !url.includes('res.cloudinary.com')) return url;
+            const i = url.indexOf('/upload/');
+            return i < 0 ? url : `${url.slice(0, i + 8)}${transform}/${url.slice(i + 8)}`;
+        };
+        const imgHtml = (url, transform) =>
+            `<img class="lazy-img" src="${escapeHtml(cld(url, transform))}" data-orig="${escapeHtml(url)}" alt="" loading="lazy" crossorigin="anonymous" onload="this.classList.add('loaded')" onerror="if(this.dataset.orig&&this.getAttribute('src')!==this.dataset.orig){this.src=this.dataset.orig}">`;
+
+        // Esqueleto de card enquanto os dados ainda estão chegando
+        const skeletonCards = (n = 3) => Array.from({ length: n }, () => `
+            <div class="card skel" aria-hidden="true">
+                <div class="card-main">
+                    <div class="thumb skel-box"></div>
+                    <div class="card-info"><div class="skel-line w60"></div><div class="skel-line w40"></div></div>
+                    <div class="skel-box score-sk"></div>
+                </div>
+            </div>`).join('');
+
+        // ===================== CONEXÃO =====================
+        const offlineBar = document.getElementById('offline-bar');
+        const updateOnlineUI = () => offlineBar.classList.toggle('hidden', navigator.onLine);
+        window.addEventListener('online', () => { updateOnlineUI(); toast('Conexão de volta'); });
+        window.addEventListener('offline', updateOnlineUI);
+        // Sem internet o Firestore guarda a escrita e envia depois; a promessa só resolve com a internet de volta.
+        // Por isso, offline, não esperamos por ela (senão o botão ficaria travado em "Salvando...").
+        const commitWrite = (promise) => {
+            if (navigator.onLine) return promise;
+            promise.catch((err) => console.error('Erro ao sincronizar depois:', err));
+            return Promise.resolve();
         };
 
         // Monta uma URL do Google Maps a partir do que a pessoa colou: se já for
@@ -1000,6 +1089,12 @@ Obs: comentário livre"></textarea>
             }
 
             if (isVisitados) renderCards(); else renderWishlist();
+
+            // transição suave ao trocar de aba
+            const list = isVisitados ? cardsList : wishlistListEl;
+            list.classList.remove('view-in');
+            void list.offsetWidth;
+            list.classList.add('view-in');
         };
 
         tabVisitados.addEventListener('click', () => setActiveTab('visitados'));
@@ -1010,6 +1105,7 @@ Obs: comentário livre"></textarea>
         const toggleFavorito = async (id) => {
             const en = entries.find(e => e.id === id);
             if (!en) return;
+            if (!en.favorito) justFavorited.add(id);
             try {
                 await updateDoc(doc(db, "avaliacoes", id), { favorito: !en.favorito });
             } catch (err) {
@@ -1077,7 +1173,10 @@ Obs: comentário livre"></textarea>
 
         // Importa um arquivo .json exportado pelo próprio MajuChef, restaurando
         // os registros no Firestore (mesmo id = sobrescreve o que já existir).
-        btnImport.addEventListener('click', () => importFileInput.click());
+        btnImport.addEventListener('click', () => {
+            if (!navigator.onLine) { alert('Sem internet. Conecte-se para importar um backup.'); return; }
+            importFileInput.click();
+        });
 
         importFileInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
@@ -1190,6 +1289,10 @@ Obs: comentário livre"></textarea>
                 // caso outra pessoa use o mesmo aparelho/navegador depois.
                 entries = [];
                 wishlist = [];
+                entriesLoaded = false;
+                wishlistLoaded = false;
+                seenCardIds.clear();
+                justFavorited.clear();
                 searchTerm = '';
                 filterTipo = '';
                 filterNota = '';
@@ -1250,17 +1353,24 @@ Obs: comentário livre"></textarea>
         // ===================== CARREGAR / LISTAR =====================
         const loadEntries = () => {
             permissionError.classList.add('hidden');
-            unsubscribeSnapshot = onSnapshot(collection(db, "avaliacoes"), (snapshot) => {
+            entriesLoaded = false;
+            renderCards(); // mostra o esqueleto até chegar a primeira resposta
+            // includeMetadataChanges: avisa também quando a resposta passa de "cópia do aparelho" para "servidor".
+            unsubscribeSnapshot = onSnapshot(collection(db, "avaliacoes"), { includeMetadataChanges: true }, (snapshot) => {
+                // Cópia local vazia com internet disponível: espera o servidor responder (evita piscar "nenhum restaurante").
+                if (snapshot.metadata.fromCache && snapshot.empty && navigator.onLine) return;
+                // Mudança só de metadados (ex.: o servidor confirmou o que já estava na tela): não redesenha.
+                if (entriesLoaded && snapshot.docChanges().length === 0) return;
                 entries = [];
                 snapshot.forEach((d) => entries.push({ id: d.id, ...d.data() }));
+                entriesLoaded = true;
                 renderCards();
             }, (error) => {
                 console.error("Erro ao carregar registros:", error);
-                if (error.code === 'permission-denied') {
-                    permissionError.classList.remove('hidden');
-                    cardsList.innerHTML = '';
-                    emptyState.classList.add('hidden');
-                }
+                entriesLoaded = true;
+                cardsList.innerHTML = '';
+                emptyState.classList.add('hidden');
+                if (error.code === 'permission-denied') permissionError.classList.remove('hidden');
             });
         };
 
@@ -1286,6 +1396,12 @@ Obs: comentário livre"></textarea>
             });
             filtered.sort(SORTERS[sortBy] || SORTERS.recentes);
 
+            if (!entriesLoaded) {
+                cardsList.innerHTML = skeletonCards(3);
+                emptyState.classList.add('hidden');
+                return;
+            }
+
             cardsList.innerHTML = '';
             emptyState.classList.toggle('hidden', entries.length > 0);
 
@@ -1303,7 +1419,7 @@ Obs: comentário livre"></textarea>
                 visitCounts[key] = (visitCounts[key] || 0) + 1;
             });
 
-            filtered.forEach(en => {
+            filtered.forEach((en, index) => {
                 const pratos = Array.isArray(en.pratos) ? en.pratos : [];
                 const dishes = pratos.slice(0, 3).map(p =>
                     `<span class="dish ${notaTone(p.nota)}">${escapeHtml(p.nome) || 'Prato'}${p.nota ? ` <b>${escapeHtml(p.nota)}</b>` : ''}</span>`
@@ -1318,15 +1434,24 @@ Obs: comentário livre"></textarea>
                 const visitCount = visitCounts[normalizeName(en.restaurante)] || 1;
                 const avg = getEntryAvgNota(en);
 
+                // Com foto: capa grande no topo do card. Sem foto: ícone do tipo de comida.
                 const temFotos = Array.isArray(en.fotos) && en.fotos.length > 0;
-                const thumbHtml = temFotos
-                    ? `<div class="thumb entry-thumb" data-id="${escapeHtml(en.id)}"><img src="${escapeHtml(en.fotos[0])}" alt="" loading="lazy">${en.fotos.length > 1 ? `<span class="thumb-count">${en.fotos.length}</span>` : ''}</div>`
-                    : `<div class="thumb"><i class="fas ${TIPO_ICONS[en.tipo] || 'fa-utensils'}"></i></div>`;
+                const coverHtml = temFotos
+                    ? `<div class="cover entry-thumb" data-id="${escapeHtml(en.id)}">${imgHtml(en.fotos[0], IMG_COVER)}${en.fotos.length > 1 ? `<span class="thumb-count"><i class="fas fa-images"></i>${en.fotos.length}</span>` : ''}</div>`
+                    : '';
+                const thumbHtml = temFotos ? '' : `<div class="thumb"><i class="fas ${TIPO_ICONS[en.tipo] || 'fa-utensils'}"></i></div>`;
+
+                // Só cards novos entram com animação (assim favoritar ou editar não faz a lista toda "pular")
+                const isNew = !seenCardIds.has(en.id);
+                seenCardIds.add(en.id);
+                const pop = justFavorited.delete(en.id) && en.favorito;
 
                 const card = document.createElement('article');
-                card.className = 'card entry-card';
+                card.className = `card entry-card${isNew ? ' enter' : ''}`;
+                if (isNew) card.style.animationDelay = `${Math.min(index, 8) * 45}ms`;
                 card.dataset.id = en.id;
                 card.innerHTML = `
+                    ${coverHtml}
                     <div class="card-main">
                         ${thumbHtml}
                         <div class="card-info">
@@ -1342,7 +1467,7 @@ Obs: comentário livre"></textarea>
                             ? `<button type="button" class="profile-btn" data-restaurante="${escapeHtml(en.restaurante)}"><i class="fas fa-clock-rotate-left"></i>${visitCount} visitas</button>`
                             : '<span></span>'}
                         <div class="card-actions">
-                            <button type="button" class="icon-btn favorito-btn ${en.favorito ? 'on' : ''}" data-id="${escapeHtml(en.id)}" aria-label="${en.favorito ? 'Remover dos favoritos' : 'Marcar como favorito'}"><i class="${en.favorito ? 'fas' : 'far'} fa-heart"></i></button>
+                            <button type="button" class="icon-btn favorito-btn ${en.favorito ? 'on' : ''}${pop ? ' pop' : ''}" data-id="${escapeHtml(en.id)}" aria-label="${en.favorito ? 'Remover dos favoritos' : 'Marcar como favorito'}"><i class="${en.favorito ? 'fas' : 'far'} fa-heart"></i></button>
                             ${en.endereco ? `<a href="${escapeHtml(getMapsUrl(en.endereco))}" target="_blank" rel="noopener" class="icon-btn maps-link" aria-label="Ver no mapa"><i class="fas fa-location-dot"></i></a>` : ''}
                             <button type="button" class="icon-btn share-btn" data-id="${escapeHtml(en.id)}" aria-label="Compartilhar recomendação"><i class="fas fa-share-nodes"></i></button>
                         </div>
@@ -1440,7 +1565,7 @@ Obs: comentário livre"></textarea>
                 const fotos = Array.isArray(v.fotos) ? v.fotos : [];
                 const fotosHtml = fotos.length ? `
                     <div class="visit-photos">
-                        ${fotos.slice(0, 4).map((url, i) => `<span class="visit-thumb" data-vid="${escapeHtml(v.id)}" data-idx="${i}"><img src="${escapeHtml(url)}" alt="" loading="lazy"></span>`).join('')}
+                        ${fotos.slice(0, 4).map((url, i) => `<span class="visit-thumb" data-vid="${escapeHtml(v.id)}" data-idx="${i}">${imgHtml(url, IMG_THUMB)}</span>`).join('')}
                     </div>
                 ` : '';
                 return `
@@ -1497,12 +1622,18 @@ Obs: comentário livre"></textarea>
 
         const loadWishlist = () => {
             wishlistPermissionError.classList.add('hidden');
-            unsubscribeWishlistSnapshot = onSnapshot(collection(db, "desejos"), (snapshot) => {
+            wishlistLoaded = false;
+            unsubscribeWishlistSnapshot = onSnapshot(collection(db, "desejos"), { includeMetadataChanges: true }, (snapshot) => {
+                if (snapshot.metadata.fromCache && snapshot.empty && navigator.onLine) return;
+                if (wishlistLoaded && snapshot.docChanges().length === 0) return;
                 wishlist = [];
                 snapshot.forEach((d) => wishlist.push({ id: d.id, ...d.data() }));
+                wishlistLoaded = true;
                 if (currentTab === 'desejos') renderWishlist();
             }, (error) => {
                 console.error("Erro ao carregar lista de desejos:", error);
+                wishlistLoaded = true;
+                if (currentTab === 'desejos') wishlistListEl.innerHTML = '';
                 if (error.code === 'permission-denied' && currentTab === 'desejos') {
                     wishlistPermissionError.classList.remove('hidden');
                     wishlistListEl.innerHTML = '';
@@ -1517,6 +1648,12 @@ Obs: comentário livre"></textarea>
                 if (!searchTerm) return true;
                 return (w.nome || '').toLowerCase().includes(searchTerm) || (w.motivo || '').toLowerCase().includes(searchTerm);
             }).slice().sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+
+            if (!wishlistLoaded) {
+                wishlistListEl.innerHTML = skeletonCards(2);
+                wishlistEmptyState.classList.add('hidden');
+                return;
+            }
 
             wishlistListEl.innerHTML = '';
             wishlistEmptyState.classList.toggle('hidden', wishlist.length > 0);
@@ -1611,9 +1748,9 @@ Obs: comentário livre"></textarea>
             };
             try {
                 if (isEditingWish) {
-                    await updateDoc(doc(db, "desejos", draftWishId), { ...data, editadoPorEmail: currentUser.email });
+                    await commitWrite(updateDoc(doc(db, "desejos", draftWishId), { ...data, editadoPorEmail: currentUser.email }));
                 } else {
-                    await setDoc(doc(db, "desejos", draftWishId), { ...data, criadoPorEmail: currentUser.email, createdAt: new Date().toISOString() });
+                    await commitWrite(setDoc(doc(db, "desejos", draftWishId), { ...data, criadoPorEmail: currentUser.email, createdAt: new Date().toISOString() }));
                 }
                 window.closeWishlistModal();
                 toast('Salvo na lista');
@@ -1626,7 +1763,7 @@ Obs: comentário livre"></textarea>
         btnDeleteWish.addEventListener('click', async () => {
             if (!draftWishId || !confirm('Excluir este item da lista de desejos?')) return;
             try {
-                await deleteDoc(doc(db, "desejos", draftWishId));
+                await commitWrite(deleteDoc(doc(db, "desejos", draftWishId)));
                 window.closeWishlistModal();
             } catch (err) {
                 console.error('Erro ao excluir item da lista de desejos:', err);
@@ -1872,7 +2009,7 @@ Obs: comentário livre"></textarea>
         const renderFotosPreview = () => {
             fotosPreviewEl.innerHTML = modalFotos.map((f, i) => `
                 <div class="photo-tile">
-                    <img src="${escapeHtml(f.previewUrl || f.url)}" alt="">
+                    <img src="${escapeHtml(f.previewUrl || cld(f.url, IMG_THUMB))}" alt="" ${f.url ? `data-orig="${escapeHtml(f.url)}" onerror="if(this.dataset.orig&&this.getAttribute('src')!==this.dataset.orig){this.src=this.dataset.orig}"` : ''}>
                     <button type="button" class="foto-remove-btn" data-idx="${i}" aria-label="Remover foto"><i class="fas fa-xmark"></i></button>
                 </div>
             `).join('');
@@ -1912,7 +2049,12 @@ Obs: comentário livre"></textarea>
         const photoViewerCountEl = document.getElementById('photo-viewer-count');
 
         const renderPhotoViewer = () => {
-            photoViewerImg.src = photoViewerList[photoViewerIndex];
+            const orig = photoViewerList[photoViewerIndex];
+            // versão grande porém otimizada; se falhar, cai para a original
+            photoViewerImg.onerror = () => { if (photoViewerImg.getAttribute('src') !== orig) photoViewerImg.src = orig; };
+            photoViewerImg.src = cld(orig, IMG_FULL);
+            // já deixa a próxima foto carregando
+            if (photoViewerList.length > 1) new Image().src = cld(photoViewerList[(photoViewerIndex + 1) % photoViewerList.length], IMG_FULL);
             const temVarias = photoViewerList.length > 1;
             photoViewerPrevBtn.classList.toggle('hidden', !temVarias);
             photoViewerNextBtn.classList.toggle('hidden', !temVarias);
@@ -1936,6 +2078,16 @@ Obs: comentário livre"></textarea>
             photoViewerIndex = (photoViewerIndex + delta + photoViewerList.length) % photoViewerList.length;
             renderPhotoViewer();
         };
+
+        // Deslizar o dedo para o lado troca de foto
+        let swipeStartX = null;
+        photoViewerModal.addEventListener('touchstart', (e) => { swipeStartX = e.touches[0].clientX; }, { passive: true });
+        photoViewerModal.addEventListener('touchend', (e) => {
+            if (swipeStartX === null || photoViewerList.length < 2) { swipeStartX = null; return; }
+            const dx = e.changedTouches[0].clientX - swipeStartX;
+            swipeStartX = null;
+            if (Math.abs(dx) > 50) window.photoViewerNav(dx < 0 ? 1 : -1);
+        });
 
         // ===================== MODAL: ABRIR / FECHAR =====================
         const modal = document.getElementById('entry-modal');
@@ -2027,6 +2179,10 @@ Obs: comentário livre"></textarea>
             try {
                 // Fotos que já tinham URL (Cloudinary) não sobem de novo; só as novas.
                 const temFotosNovas = modalFotos.some(f => f.file);
+                if (temFotosNovas && !navigator.onLine) {
+                    alert('Sem internet: fotos novas só podem ser enviadas quando a conexão voltar. Tire as fotos do registro ou tente de novo depois.');
+                    return;
+                }
                 if (temFotosNovas) btnSaveEntry.innerText = 'Enviando fotos...';
                 const fotos = [];
                 for (const f of modalFotos) {
@@ -2049,19 +2205,19 @@ Obs: comentário livre"></textarea>
 
                 // Quem criou fica registrado só na criação; nas edições guardamos quem editou.
                 if (isEditing) {
-                    await updateDoc(doc(db, "avaliacoes", draftId), { ...data, editadoPorEmail: currentUser.email });
+                    await commitWrite(updateDoc(doc(db, "avaliacoes", draftId), { ...data, editadoPorEmail: currentUser.email }));
                 } else {
-                    await setDoc(doc(db, "avaliacoes", draftId), { ...data, criadoPorEmail: currentUser.email, createdAt: new Date().toISOString() });
+                    await commitWrite(setDoc(doc(db, "avaliacoes", draftId), { ...data, criadoPorEmail: currentUser.email, createdAt: new Date().toISOString() }));
                 }
 
                 // Visita salva: agora sim o desejo de origem (se houver) sai da lista.
                 const wishId = isEditing ? null : pendingWishId;
                 closeModal();
                 if (wishId) {
-                    try { await deleteDoc(doc(db, "desejos", wishId)); }
+                    try { await commitWrite(deleteDoc(doc(db, "desejos", wishId))); }
                     catch (err) { console.error('Erro ao remover da lista de desejos:', err); }
                 }
-                toast('Registro salvo');
+                toast(navigator.onLine ? 'Registro salvo' : 'Salvo no aparelho · envia quando voltar a internet');
             } catch (err) {
                 console.error('Erro ao salvar:', err);
                 alert('Não foi possível salvar. Verifique sua conexão, as regras do Firestore e se o envio das fotos funcionou.');
@@ -2071,10 +2227,17 @@ Obs: comentário livre"></textarea>
             }
         });
 
+        // ===================== APP INSTALÁVEL / OFFLINE =====================
+        updateOnlineUI();
+        if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+            const registerSW = () => navigator.serviceWorker.register('sw.js').catch((err) => console.warn('Service worker não registrado:', err));
+            if (document.readyState === 'complete') registerSW(); else window.addEventListener('load', registerSW);
+        }
+
         btnDelete.addEventListener('click', async () => {
             if (!draftId || !confirm('Excluir este registro?')) return;
             try {
-                await deleteDoc(doc(db, "avaliacoes", draftId));
+                await commitWrite(deleteDoc(doc(db, "avaliacoes", draftId)));
                 closeModal();
             } catch (err) {
                 console.error('Erro ao excluir:', err);
