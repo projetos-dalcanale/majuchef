@@ -16,9 +16,7 @@
     <link rel="apple-touch-icon" href="icon-180.png">
     <link rel="icon" href="icon-180.png">
 
-    <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = { darkMode: 'class' };
         // Aplica o tema salvo antes da página desenhar, pra não "piscar" claro e depois escuro.
         (function () {
             try {
@@ -31,292 +29,663 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+
     <style>
-        body { font-family: 'Poppins', system-ui, sans-serif; }
-        .font-display { font-family: 'Playfair Display', serif; }
+        /* ===================== TOKENS (cores mantidas: rosa, âmbar e pedra) ===================== */
+        :root {
+            --bg: #fdf1f4;
+            --surface: #ffffff;
+            --fill: #f8eaee;
+            --fill-2: #efd9df;
+            --line: rgba(120, 72, 80, .12);
+            --text: #292524;
+            --muted: #78706b;
+            --faint: #a8a09b;
+            --accent: #e11d48;
+            --accent-ink: #be123c;
+            --rose-soft: #ffe4ea;
+            --amber: #d97706;
+            --amber-soft: #fff1d1;
+            --bad: #dc2626;      --bad-soft: #fee2e2;
+            --mid: #ea580c;      --mid-soft: #ffedd5;
+            --good: #059669;     --good-soft: #d6f5e8;
+            --shadow: 0 1px 2px rgba(80, 30, 40, .05), 0 8px 24px -12px rgba(80, 30, 40, .18);
+            --font-body: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+            --font-display: 'Fraunces', Georgia, serif;
+        }
+        :root.dark {
+            --bg: #1c1917;
+            --surface: #292524;
+            --fill: #34302e;
+            --fill-2: #44403c;
+            --line: rgba(255, 255, 255, .09);
+            --text: #f5f5f4;
+            --muted: #a8a29e;
+            --faint: #78716c;
+            --accent: #fb4f6f;
+            --accent-ink: #fda4b4;
+            --rose-soft: rgba(251, 79, 111, .15);
+            --amber: #fbbf24;
+            --amber-soft: rgba(251, 191, 36, .14);
+            --bad: #f87171;      --bad-soft: rgba(248, 113, 113, .15);
+            --mid: #fb923c;      --mid-soft: rgba(251, 146, 60, .15);
+            --good: #34d399;     --good-soft: rgba(52, 211, 153, .15);
+            --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px -12px rgba(0, 0, 0, .5);
+        }
+
+        /* ===================== BASE ===================== */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html { -webkit-text-size-adjust: 100%; }
+        body {
+            margin: 0; min-height: 100vh; min-height: 100dvh;
+            font-family: var(--font-body); font-size: 15px; line-height: 1.4;
+            color: var(--text); background: var(--bg);
+            -webkit-font-smoothing: antialiased;
+        }
+        button, input, select, textarea { font: inherit; color: inherit; }
+        button { background: none; border: 0; padding: 0; cursor: pointer; }
+        h1, h2, h3, p { margin: 0; }
+        i { pointer-events: none; }
+        .hidden { display: none !important; }
+        .flex { display: flex; }
+        :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+        body:has(.sheet-root:not(.hidden)) { overflow: hidden; }
+        @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+        /* Tons por nota: < 5 vermelho, 5 a 7 laranja, 8 a 10 verde */
+        .tone-bad  { --t-fg: var(--bad);  --t-bg: var(--bad-soft); }
+        .tone-mid  { --t-fg: var(--mid);  --t-bg: var(--mid-soft); }
+        .tone-good { --t-fg: var(--good); --t-bg: var(--good-soft); }
+        .tone-none { --t-fg: var(--muted); --t-bg: var(--fill); }
+
+        /* ===================== LOGIN ===================== */
+        .login {
+            position: fixed; inset: 0; z-index: 70; overflow-y: auto;
+            display: flex; align-items: center; justify-content: center; padding: 24px;
+            background: radial-gradient(120% 55% at 50% 0%, var(--rose-soft), transparent 70%), var(--bg);
+        }
+        .login-box { width: 100%; max-width: 360px; text-align: center; }
+        .brand-mark {
+            display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 11px;
+            background: var(--accent); color: #fff; font-size: 15px;
+        }
+        .brand-mark.lg { width: 72px; height: 72px; border-radius: 24px; font-size: 30px; box-shadow: 0 14px 30px -12px var(--accent); }
+        .login h1 { font-family: var(--font-display); font-size: 36px; font-weight: 700; margin-top: 18px; letter-spacing: -.01em; }
+        .login .tagline { color: var(--muted); margin: 6px 0 28px; }
+        .login form { display: flex; flex-direction: column; gap: 12px; text-align: left; }
+        .form-error { background: var(--bad-soft); color: var(--bad); padding: 10px 14px; border-radius: 12px; font-size: 13px; font-weight: 500; }
+
+        /* ===================== FORMULÁRIOS ===================== */
+        .label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin: 0 0 6px 2px; }
+        .input {
+            width: 100%; min-height: 48px; padding: 12px 14px; border-radius: 14px;
+            border: 1.5px solid transparent; background: var(--fill); font-size: 16px; outline: none;
+            transition: border-color .15s, background .15s;
+        }
+        .input::placeholder { color: var(--faint); }
+        .input:focus { border-color: var(--accent); background: var(--surface); }
+        textarea.input { resize: none; line-height: 1.45; }
+        select.input {
+            appearance: none; -webkit-appearance: none; padding-right: 38px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%23a8a09b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 14px center;
+        }
+        .field + .field { margin-top: 16px; }
+        .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+        .field-row .field + .field { margin-top: 0; }
+        .field-row + .field { margin-top: 16px; }
+        .hint { font-size: 12px; color: var(--faint); margin: 6px 2px 0; }
+        .section-head { display: flex; align-items: center; justify-content: space-between; margin: 22px 2px 8px; }
+        .section-head .label { margin: 0; }
+        .link-btn { color: var(--accent-ink); font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; min-height: 32px; }
+
+        .switch-row {
+            display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer;
+            margin-top: 22px; padding: 12px 14px; border-radius: 14px; background: var(--fill); font-weight: 600;
+        }
+        .switch-row i { color: var(--accent); margin-right: 8px; }
+        .switch {
+            appearance: none; -webkit-appearance: none; flex: none; position: relative; cursor: pointer;
+            width: 50px; height: 30px; border-radius: 15px; background: var(--fill-2); transition: background .2s;
+        }
+        .switch::after {
+            content: ''; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%;
+            background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .25); transition: transform .2s;
+        }
+        .switch:checked { background: var(--accent); }
+        .switch:checked::after { transform: translateX(20px); }
+
+        details.paste { background: var(--fill); border-radius: 14px; padding: 0 14px; }
+        details.paste summary { list-style: none; cursor: pointer; min-height: 46px; display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 14px; color: var(--accent-ink); }
+        details.paste summary::-webkit-details-marker { display: none; }
+        details.paste summary .chev { margin-left: auto; font-size: 11px; transition: transform .2s; }
+        details.paste[open] summary .chev { transform: rotate(180deg); }
+        details.paste .paste-inner { padding: 0 0 14px; }
+        details.paste textarea { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14px; background: var(--surface); }
+
+        .prato-row { display: flex; gap: 8px; align-items: center; }
+        .prato-row + .prato-row { margin-top: 8px; }
+        .prato-row .prato-nome { flex: 1; min-width: 0; }
+        .prato-row .prato-nota { width: 76px; flex: none; font-weight: 700; text-align: center; padding-left: 10px; }
+        .prato-nota.tone-bad, .prato-nota.tone-mid, .prato-nota.tone-good { background-color: var(--t-bg); color: var(--t-fg); }
+
+        .photo-row { display: flex; flex-wrap: wrap; gap: 10px; }
+        #fotos-preview { display: contents; }
+        .photo-add {
+            width: 72px; height: 72px; border-radius: 16px; border: 1.5px dashed var(--fill-2); color: var(--accent-ink);
+            display: grid; place-items: center; font-size: 20px; background: var(--fill);
+        }
+        .photo-tile { position: relative; width: 72px; height: 72px; border-radius: 16px; overflow: hidden; background: var(--fill); }
+        .photo-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .photo-tile .foto-remove-btn {
+            position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border-radius: 50%;
+            background: rgba(0, 0, 0, .62); color: #fff; font-size: 10px; display: grid; place-items: center;
+        }
+
+        /* ===================== BOTÕES ===================== */
+        .btn {
+            min-height: 50px; padding: 0 20px; border-radius: 16px; font-weight: 700; font-size: 15px;
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            transition: transform .1s, opacity .15s, background .15s; user-select: none;
+        }
+        .btn:active { transform: scale(.98); }
+        .btn:disabled { opacity: .55; cursor: not-allowed; }
+        .btn-primary { background: var(--accent); color: #fff; }
+        .btn-soft { background: var(--rose-soft); color: var(--accent-ink); }
+        .btn-ghost { background: var(--fill); color: var(--text); }
+        .btn-danger { background: var(--bad-soft); color: var(--bad); }
+        .btn-block { width: 100%; }
+        .btn-sm { min-height: 40px; border-radius: 12px; font-size: 14px; padding: 0 16px; }
+        .icon-btn {
+            width: 40px; height: 40px; border-radius: 50%; display: inline-grid; place-items: center;
+            color: var(--muted); font-size: 15px; transition: background .15s, color .15s; flex: none;
+        }
+        .icon-btn:hover { background: var(--fill); }
+        .icon-btn.on { color: var(--accent); }
+
+        /* ===================== CABEÇALHO / BUSCA / FILTROS ===================== */
+        #app { max-width: 520px; margin: 0 auto; min-height: 100dvh; padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
+        .top { padding: calc(14px + env(safe-area-inset-top)) 20px 6px; }
+        .top-row { display: flex; align-items: center; justify-content: space-between; }
+        .brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 700; font-size: 20px; color: var(--accent-ink); }
+        .avatar {
+            width: 40px; height: 40px; border-radius: 50%; background: var(--surface); border: 1px solid var(--line);
+            display: grid; place-items: center; font-weight: 700; color: var(--accent-ink); font-size: 15px; box-shadow: var(--shadow);
+        }
+        .page-title { font-family: var(--font-display); font-weight: 700; font-size: 34px; letter-spacing: -.02em; margin-top: 18px; line-height: 1.1; }
+        .page-sub { color: var(--muted); margin-top: 4px; min-height: 20px; }
+
+        .toolbar {
+            position: sticky; top: 0; z-index: 20; padding: 10px 20px 10px;
+            background: color-mix(in srgb, var(--bg) 88%, transparent);
+            -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+        }
+        .search { position: relative; }
+        .search i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--faint); font-size: 14px; }
+        .search input {
+            width: 100%; height: 46px; padding: 0 14px 0 42px; border-radius: 14px; font-size: 16px; outline: none;
+            border: 1px solid var(--line); background: var(--surface); transition: border-color .15s;
+        }
+        .search input::placeholder { color: var(--faint); }
+        .search input:focus { border-color: var(--accent); }
+
+        .chips-row { display: flex; gap: 8px; overflow-x: auto; margin: 10px -20px 0; padding: 2px 20px; scrollbar-width: none; }
+        .chips-row::-webkit-scrollbar { display: none; }
+        .chip-group { display: flex; gap: 8px; flex: none; }
+        .chip {
+            position: relative; flex: none; height: 36px; padding: 0 14px; border-radius: 999px; white-space: nowrap;
+            display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600;
+            background: var(--surface); border: 1px solid var(--line); color: var(--muted); transition: background .15s, color .15s;
+        }
+        .chip.is-active { background: var(--text); color: var(--bg); border-color: transparent; }
+        .chip.fav.is-active { background: var(--accent); color: #fff; }
+        .chip.tone-bad, .chip.tone-mid, .chip.tone-good { color: var(--t-fg); }
+        .chip.tone-bad::before, .chip.tone-mid::before, .chip.tone-good::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--t-fg); }
+        .chip.tone-bad.is-active { background: var(--bad); color: #fff; }
+        .chip.tone-mid.is-active { background: var(--mid); color: #fff; }
+        .chip.tone-good.is-active { background: var(--good); color: #fff; }
+        .chip.tone-bad.is-active::before, .chip.tone-mid.is-active::before, .chip.tone-good.is-active::before { background: #fff; }
+        .chip select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; font-size: 16px; cursor: pointer; }
+
+        main { padding: 8px 20px 0; }
+        #cards-list, #wishlist-list { display: flex; flex-direction: column; gap: 12px; }
+
+        /* ===================== CARDS ===================== */
+        .card {
+            background: var(--surface); border-radius: 22px; padding: 14px; border: 1px solid var(--line);
+            box-shadow: var(--shadow); cursor: pointer; transition: transform .12s;
+        }
+        .card:active { transform: scale(.99); }
+        .card-main { display: flex; gap: 12px; align-items: center; }
+        .thumb {
+            position: relative; width: 62px; height: 62px; border-radius: 18px; overflow: hidden; flex: none;
+            display: grid; place-items: center; font-size: 22px; background: var(--rose-soft); color: var(--accent);
+        }
+        .thumb.amber { background: var(--amber-soft); color: var(--amber); }
+        .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .thumb-count {
+            position: absolute; right: 4px; bottom: 4px; background: rgba(0, 0, 0, .6); color: #fff;
+            font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 8px;
+        }
+        .card-info { flex: 1; min-width: 0; }
+        .card-title { font-weight: 700; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card-meta { font-size: 12.5px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card-meta.wrap { white-space: normal; }
+        .score {
+            flex: none; min-width: 48px; height: 48px; padding: 0 6px; border-radius: 16px; display: grid; place-items: center;
+            background: var(--t-bg); color: var(--t-fg); font-family: var(--font-display); font-weight: 700; font-size: 18px;
+        }
+        .dishes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+        .dish {
+            display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px;
+            background: var(--t-bg); color: var(--t-fg); font-size: 12px; font-weight: 600; max-width: 100%;
+        }
+        .dish b { font-weight: 700; }
+        .dish-more { color: var(--faint); font-size: 12px; font-weight: 600; align-self: center; }
+        .tags { margin-top: 8px; font-size: 12px; color: var(--accent-ink); display: flex; flex-wrap: wrap; gap: 4px 10px; }
+        .card-foot {
+            display: flex; align-items: center; justify-content: space-between; gap: 8px;
+            margin-top: 12px; padding-top: 6px; margin-bottom: -6px; border-top: 1px solid var(--line);
+        }
+        .card-actions { display: flex; align-items: center; margin-right: -8px; }
+        .profile-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--accent-ink); min-height: 40px; }
+        .card .wish-visit-btn { margin-top: 12px; }
+
+        .empty { text-align: center; padding: 56px 16px; color: var(--muted); }
+        .empty-icon { width: 76px; height: 76px; border-radius: 26px; background: var(--rose-soft); color: var(--accent); display: grid; place-items: center; font-size: 30px; margin: 0 auto 18px; }
+        .empty h3 { font-family: var(--font-display); font-size: 21px; color: var(--text); margin-bottom: 6px; }
+        .empty p { max-width: 280px; margin: 0 auto; }
+        .notice { background: var(--amber-soft); color: var(--amber); padding: 14px 16px; border-radius: 16px; font-size: 13px; font-weight: 500; }
+        .no-results { text-align: center; padding: 40px 16px; color: var(--faint); font-size: 14px; }
+
+        /* ===================== BARRA DE ABAS ===================== */
+        .tabbar {
+            position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; max-width: 520px; margin: 0 auto;
+            display: grid; grid-template-columns: 1fr 84px 1fr; align-items: center;
+            padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+            background: color-mix(in srgb, var(--surface) 90%, transparent);
+            -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+            border-top: 1px solid var(--line);
+        }
+        .tab { display: flex; flex-direction: column; align-items: center; gap: 3px; min-height: 52px; justify-content: center; color: var(--faint); font-size: 11px; font-weight: 600; transition: color .15s; }
+        .tab i { font-size: 20px; }
+        .tab.active { color: var(--accent); }
+        .fab {
+            justify-self: center; width: 58px; height: 58px; border-radius: 50%; margin-top: -26px;
+            background: var(--accent); color: #fff; font-size: 22px; display: grid; place-items: center;
+            border: 4px solid var(--bg); box-shadow: 0 10px 22px -8px var(--accent); transition: transform .12s;
+        }
+        .fab:active { transform: scale(.93); }
+
+        /* ===================== SHEETS (telas que sobem de baixo) ===================== */
+        .sheet-root {
+            position: fixed; inset: 0; z-index: 50; display: flex; align-items: flex-end; justify-content: center;
+            background: rgba(24, 14, 16, .5); animation: fade .2s ease;
+        }
+        .sheet {
+            width: 100%; max-width: 520px; max-height: 94dvh; display: flex; flex-direction: column; overflow: hidden;
+            background: var(--surface); border-radius: 28px 28px 0 0; animation: sheet-up .32s cubic-bezier(.2, .8, .2, 1);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        .sheet-grabber { width: 40px; height: 5px; border-radius: 3px; background: var(--fill-2); margin: 8px auto 0; flex: none; }
+        .sheet-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 10px 12px 6px 22px; flex: none; }
+        .sheet-title { font-family: var(--font-display); font-size: 24px; font-weight: 700; letter-spacing: -.01em; padding-top: 6px; min-width: 0; }
+        .sheet-sub { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; font-size: 13px; color: var(--muted); }
+        .sheet-body { flex: 1; overflow-y: auto; padding: 8px 22px 22px; overscroll-behavior: contain; }
+        .sheet-foot { padding: 12px 22px 14px; border-top: 1px solid var(--line); display: flex; gap: 10px; flex: none; }
+        .sheet-foot .btn { flex: 1; }
+        @media (min-width: 640px) {
+            .sheet-root { align-items: center; padding: 24px; }
+            .sheet { border-radius: 28px; max-height: 90vh; }
+        }
+        @keyframes fade { from { opacity: 0; } }
+        @keyframes sheet-up { from { transform: translateY(40px); opacity: 0; } }
+
+        .pill { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; background: var(--t-bg, var(--fill)); color: var(--t-fg, var(--muted)); }
+        .pill.amber { background: var(--amber-soft); color: var(--amber); }
+
+        .menu-user { display: flex; align-items: center; gap: 14px; padding: 4px 0 18px; }
+        .menu-user .avatar { width: 52px; height: 52px; font-size: 20px; box-shadow: none; background: var(--rose-soft); border: 0; }
+        .menu-user b { display: block; font-size: 17px; }
+        .menu-user span { color: var(--muted); font-size: 13px; word-break: break-all; }
+        .menu-list { display: flex; flex-direction: column; gap: 8px; }
+        .menu-item {
+            display: flex; align-items: center; gap: 14px; width: 100%; min-height: 58px; padding: 10px 14px;
+            border-radius: 18px; background: var(--fill); text-align: left; font-weight: 600; transition: transform .1s;
+        }
+        .menu-item:active { transform: scale(.985); }
+        .menu-ico { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; background: var(--surface); color: var(--accent); flex: none; }
+        .menu-item.danger { color: var(--bad); }
+        .menu-item.danger .menu-ico { color: var(--bad); }
+
+        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .stat { background: var(--fill); border-radius: 20px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+        .stat-label { font-size: 12px; font-weight: 600; color: var(--muted); }
+        .stat-value { font-family: var(--font-display); font-size: 28px; font-weight: 700; line-height: 1.1; color: var(--accent-ink); }
+        .stat.tone-good .stat-value { color: var(--good); }
+        .stat.amber .stat-value { color: var(--amber); }
+        .stat-wide { grid-column: span 2; }
+        .stat-value.sm { font-size: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        .surprise { text-align: center; padding: 10px 0 6px; }
+        .surprise .empty-icon { margin-bottom: 16px; }
+        .surprise-nome { font-family: var(--font-display); font-size: 30px; font-weight: 700; line-height: 1.15; color: var(--accent-ink); margin-bottom: 8px; }
+        .surprise-motivo { color: var(--muted); }
+        .stack { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+
+        .visit-item { display: block; width: 100%; text-align: left; background: var(--fill); border-radius: 20px; padding: 14px; }
+        .visit-item + .visit-item { margin-top: 10px; }
+        .visit-date { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 8px; }
+        .visit-item .dishes { margin-top: 0; }
+        .visit-obs { font-size: 13px; color: var(--muted); font-style: italic; margin-top: 10px; }
+        .visit-photos { display: flex; gap: 6px; margin-top: 10px; }
+        .visit-thumb { width: 52px; height: 52px; border-radius: 12px; overflow: hidden; display: block; }
+        .visit-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+        /* ===================== FOTO EM TELA CHEIA / TOAST ===================== */
+        .viewer { position: fixed; inset: 0; z-index: 60; background: rgba(0, 0, 0, .94); display: flex; align-items: center; justify-content: center; padding: 16px; }
+        .viewer img { max-width: 100%; max-height: 100%; border-radius: 12px; object-fit: contain; }
+        .viewer .v-btn { position: absolute; color: rgba(255, 255, 255, .85); width: 48px; height: 48px; display: grid; place-items: center; font-size: 22px; z-index: 2; }
+        .viewer .v-close { top: calc(10px + env(safe-area-inset-top)); right: 10px; }
+        .viewer .v-prev { left: 4px; }
+        .viewer .v-next { right: 4px; }
+        .viewer .v-count { position: absolute; bottom: calc(18px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); color: rgba(255, 255, 255, .75); font-size: 13px; }
+        .toast {
+            position: fixed; left: 50%; bottom: calc(100px + env(safe-area-inset-bottom)); z-index: 80; transform: translate(-50%, 12px);
+            background: var(--text); color: var(--bg); padding: 11px 18px; border-radius: 999px; font-size: 14px; font-weight: 600;
+            opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; white-space: nowrap; max-width: 90vw;
+        }
+        .toast.show { opacity: 1; transform: translate(-50%, 0); }
     </style>
 </head>
-<body class="bg-rose-50 text-stone-600 font-sans min-h-screen dark:bg-stone-900 dark:text-stone-300">
+<body>
 
     <!-- TELA DE LOGIN -->
-    <div id="login-screen" class="fixed inset-0 bg-gradient-to-b from-rose-50 to-rose-100/70 dark:from-stone-950 dark:to-stone-900 flex items-center justify-center z-50 backdrop-blur-sm p-4">
-        <div class="bg-white dark:bg-stone-800 p-8 rounded-2xl shadow-xl shadow-rose-200/40 dark:shadow-black/40 w-full max-w-sm border border-rose-100 dark:border-stone-700">
-            <div class="flex flex-col items-center mb-1">
-                <span class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-rose-500 text-white text-lg shadow-md shadow-rose-300/50 ring-2 ring-amber-300 ring-offset-2 ring-offset-white dark:ring-offset-stone-800 mb-2"><i class="fas fa-utensils"></i></span>
-                <h2 class="font-display text-2xl font-bold text-rose-700 dark:text-rose-400">MajuChef</h2>
-                <div class="w-10 h-0.5 bg-gradient-to-r from-transparent via-amber-300 to-transparent mt-2"></div>
-            </div>
-            <p class="text-center text-stone-400 dark:text-stone-500 text-sm mb-6 mt-3 italic">O diário de restaurantes do Matheus &amp; da Naju 💕</p>
-            <form id="login-form" class="space-y-4">
+    <div id="login-screen" class="login">
+        <div class="login-box">
+            <span class="brand-mark lg"><i class="fas fa-utensils"></i></span>
+            <h1>MajuChef</h1>
+            <p class="tagline">O diário de restaurantes do Matheus &amp; da Naju</p>
+            <form id="login-form">
                 <div>
-                    <label class="block text-sm font-medium text-stone-500 dark:text-stone-400 mb-1">E-mail</label>
-                    <input type="email" id="auth-email" required autocomplete="email" class="w-full rounded-lg bg-rose-50/50 dark:bg-stone-900/60 border-rose-200 dark:border-stone-600 text-stone-800 dark:text-stone-100 focus:border-rose-400 focus:ring-1 focus:ring-rose-400 p-2.5 outline-none transition">
+                    <label class="label" for="auth-email">E-mail</label>
+                    <input type="email" id="auth-email" class="input" required autocomplete="email" inputmode="email">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-stone-500 dark:text-stone-400 mb-1">Senha</label>
-                    <input type="password" id="auth-password" required minlength="6" autocomplete="current-password" class="w-full rounded-lg bg-rose-50/50 dark:bg-stone-900/60 border-rose-200 dark:border-stone-600 text-stone-800 dark:text-stone-100 focus:border-rose-400 focus:ring-1 focus:ring-rose-400 p-2.5 outline-none transition">
+                    <label class="label" for="auth-password">Senha</label>
+                    <input type="password" id="auth-password" class="input" required minlength="6" autocomplete="current-password">
                 </div>
-                <div class="text-red-500 text-sm hidden bg-red-50 dark:bg-red-950/40 p-2 rounded border border-red-200 dark:border-red-800" id="auth-error"></div>
-                <button type="submit" class="w-full bg-rose-500 text-white font-bold p-3 rounded-lg hover:bg-rose-400 transition shadow-lg shadow-rose-200/50">Entrar</button>
-                <p class="text-xs text-stone-400 dark:text-stone-500 text-center mt-2">As contas de acesso são criadas manualmente no Firebase Console. Só quem estiver na lista de e-mails autorizados (regras do Firestore) consegue ver os registros.</p>
+                <div id="auth-error" class="form-error hidden" role="alert"></div>
+                <button type="submit" class="btn btn-primary btn-block" style="margin-top:6px">Entrar</button>
             </form>
         </div>
     </div>
 
     <!-- APP PRINCIPAL -->
-    <div id="app" class="hidden max-w-md mx-auto min-h-screen flex flex-col pb-24">
-        <header class="sticky top-0 z-30 bg-rose-50/95 dark:bg-stone-900/95 backdrop-blur-sm border-b border-amber-200/60 dark:border-stone-700 px-4 pt-4 pb-3">
-            <div class="flex items-center justify-between mb-1">
-                <h1 class="font-display text-lg font-bold text-rose-700 dark:text-rose-400 flex items-center"><span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-rose-500 text-white text-xs ring-2 ring-amber-300/80 mr-2"><i class="fas fa-utensils"></i></span>MajuChef</h1>
-                <div class="flex items-center gap-2.5">
-                    <button id="btn-stats" title="Resumo" class="text-stone-400 hover:text-rose-600 dark:text-stone-500 dark:hover:text-rose-400 text-sm transition"><i class="fas fa-chart-pie"></i></button>
-                    <button id="btn-surprise" title="Não sei onde comer" class="text-stone-400 hover:text-rose-600 dark:text-stone-500 dark:hover:text-rose-400 text-sm transition"><i class="fas fa-dice"></i></button>
-                    <button id="btn-export" title="Exportar backup" class="text-stone-400 hover:text-rose-600 dark:text-stone-500 dark:hover:text-rose-400 text-sm transition"><i class="fas fa-download"></i></button>
-                    <button id="btn-import" title="Importar backup" class="text-stone-400 hover:text-rose-600 dark:text-stone-500 dark:hover:text-rose-400 text-sm transition"><i class="fas fa-upload"></i></button>
-                    <button id="btn-theme-toggle" title="Alternar tema" class="text-stone-400 hover:text-rose-600 dark:text-stone-500 dark:hover:text-rose-400 text-sm transition"><i id="theme-toggle-icon" class="fas fa-moon"></i></button>
-                    <button id="btn-logout" title="Sair" class="text-stone-400 hover:text-rose-600 dark:text-stone-500 dark:hover:text-rose-400 text-sm transition"><i class="fas fa-sign-out-alt"></i></button>
-                </div>
+    <div id="app" class="hidden">
+        <header class="top">
+            <div class="top-row">
+                <div class="brand"><span class="brand-mark"><i class="fas fa-utensils"></i></span>MajuChef</div>
+                <button id="btn-menu" class="avatar" aria-label="Abrir menu"><span id="avatar-initial">M</span></button>
             </div>
-            <p id="greeting-text" class="text-xs text-stone-400 dark:text-stone-500 mb-3"></p>
+            <h1 id="page-title" class="page-title">Visitados</h1>
+            <p id="greeting-text" class="page-sub"></p>
             <input type="file" id="import-file-input" accept="application/json" class="hidden">
-
-            <div class="flex gap-2 mb-3">
-                <button type="button" id="tab-visitados" class="tab-btn flex-1 py-2 rounded-lg text-sm font-semibold transition"></button>
-                <button type="button" id="tab-desejos" class="tab-btn flex-1 py-2 rounded-lg text-sm font-semibold transition"></button>
-            </div>
-
-            <div class="relative">
-                <i class="fas fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 dark:text-stone-500 text-sm"></i>
-                <input type="text" id="search-input" placeholder="Buscar por restaurante, prato, tag ou observação..." class="w-full pl-9 p-2.5 text-sm rounded-lg bg-white dark:bg-stone-800 border border-rose-200 dark:border-stone-600 text-stone-800 dark:text-stone-100 focus:border-rose-400 outline-none transition">
-            </div>
-            <div id="sort-row" class="flex items-center gap-2 mt-2">
-                <select id="sort-select" class="flex-1 p-2 text-xs rounded-lg bg-white dark:bg-stone-800 border border-rose-200 dark:border-stone-600 text-stone-600 dark:text-stone-300 focus:border-rose-400 outline-none transition">
-                    <option value="recentes">Mais recentes</option>
-                    <option value="antigos">Mais antigos</option>
-                    <option value="melhor-nota">Melhor nota</option>
-                    <option value="pior-nota">Pior nota</option>
-                    <option value="az">Nome (A-Z)</option>
-                </select>
-                <button type="button" id="btn-toggle-favoritos" title="Somente favoritos" class="flex-shrink-0 w-9 h-9 rounded-lg transition flex items-center justify-center">
-                    <i class="fas fa-heart"></i>
-                </button>
-            </div>
-            <div id="filter-chips" class="hidden flex flex-wrap gap-2 mt-2"></div>
-            <div id="nota-filter-chips" class="hidden flex flex-wrap gap-2 mt-2"></div>
         </header>
 
-        <main class="flex-1 px-4 pt-4">
-            <div id="empty-state" class="hidden text-center p-10 text-stone-400 dark:text-stone-500 bg-rose-50/70 dark:bg-stone-800/50 rounded-xl border border-dashed border-amber-300/50 dark:border-amber-700/40">
-                Nenhum restaurante registrado ainda. Toque no + para adicionar o primeiro.
+        <div class="toolbar">
+            <div class="search">
+                <i class="fas fa-magnifying-glass"></i>
+                <input type="search" id="search-input" placeholder="Buscar restaurante, prato ou tag" aria-label="Buscar">
             </div>
-            <div id="permission-error" class="hidden text-center p-6 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 rounded-xl border border-amber-300 dark:border-amber-700 text-sm">
-                Este e-mail não tem permissão para ver esses registros. Confira se ele foi adicionado na lista de e-mails autorizados nas regras do Firestore.
+            <div id="sort-row" class="chips-row">
+                <button type="button" id="btn-toggle-favoritos" class="chip fav" title="Somente favoritos"><i class="fas fa-heart"></i>Favoritos</button>
+                <label class="chip" title="Ordenar">
+                    <i class="fas fa-arrow-down-short-wide"></i><span id="sort-label">Mais recentes</span>
+                    <select id="sort-select" aria-label="Ordenar por">
+                        <option value="recentes">Mais recentes</option>
+                        <option value="antigos">Mais antigos</option>
+                        <option value="melhor-nota">Melhor nota</option>
+                        <option value="pior-nota">Pior nota</option>
+                        <option value="az">Nome (A-Z)</option>
+                    </select>
+                </label>
+                <div id="nota-filter-chips" class="chip-group hidden"></div>
+                <div id="filter-chips" class="chip-group hidden"></div>
             </div>
-            <div id="cards-list" class="space-y-3"></div>
+        </div>
 
-            <div id="wishlist-empty-state" class="hidden text-center p-10 text-stone-400 dark:text-stone-500 bg-rose-50/70 dark:bg-stone-800/50 rounded-xl border border-dashed border-amber-300/50 dark:border-amber-700/40">
-                Nenhum restaurante na lista de desejos ainda. Toque no + para adicionar um lugar que vocês querem experimentar.
+        <main>
+            <div id="empty-state" class="empty hidden">
+                <div class="empty-icon"><i class="fas fa-utensils"></i></div>
+                <h3>Nenhum restaurante ainda</h3>
+                <p>Toque no + para registrar o primeiro lugar que vocês visitaram.</p>
             </div>
-            <div id="wishlist-permission-error" class="hidden text-center p-6 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 rounded-xl border border-amber-300 dark:border-amber-700 text-sm">
-                Este e-mail não tem permissão para ver a lista de desejos. Falta adicionar uma regra pra coleção "desejos" no Firestore — veja a mensagem que te mandei com o passo a passo.
+            <div id="permission-error" class="notice hidden">
+                Este e-mail não tem permissão para ver esses registros. Confira se ele está na lista de e-mails autorizados nas regras do Firestore.
             </div>
-            <div id="wishlist-list" class="hidden space-y-3"></div>
+            <div id="cards-list"></div>
+
+            <div id="wishlist-empty-state" class="empty hidden">
+                <div class="empty-icon"><i class="fas fa-bookmark"></i></div>
+                <h3>Lista vazia</h3>
+                <p>Toque no + para guardar um lugar que vocês querem experimentar.</p>
+            </div>
+            <div id="wishlist-permission-error" class="notice hidden">
+                Este e-mail não tem permissão para ver a lista de desejos. Falta uma regra para a coleção "desejos" no Firestore.
+            </div>
+            <div id="wishlist-list" class="hidden"></div>
         </main>
+
+        <nav class="tabbar" aria-label="Navegação principal">
+            <button type="button" id="tab-visitados" class="tab active"><i class="fas fa-utensils"></i><span>Visitados</span></button>
+            <button type="button" id="btn-open-add" class="fab" aria-label="Adicionar"><i class="fas fa-plus"></i></button>
+            <button type="button" id="tab-desejos" class="tab"><i class="fas fa-bookmark"></i><span>Quero visitar</span></button>
+        </nav>
     </div>
 
-    <!-- BOTÃO FLUTUANTE DE ADICIONAR -->
-    <button id="btn-open-add" class="hidden fixed bottom-6 right-6 z-30 w-14 h-14 rounded-full bg-rose-500 hover:bg-rose-400 text-white text-xl shadow-lg shadow-rose-300/50 ring-2 ring-amber-300 ring-offset-2 ring-offset-rose-50 dark:ring-offset-stone-900 flex items-center justify-center transition">
-        <i class="fas fa-plus"></i>
-    </button>
+    <!-- MENU -->
+    <div id="menu-modal" class="sheet-root hidden" data-close="closeMenuModal">
+        <div class="sheet" role="dialog" aria-modal="true" aria-label="Menu">
+            <div class="sheet-grabber"></div>
+            <div class="sheet-body" style="padding-top:18px">
+                <div class="menu-user">
+                    <span class="avatar"><span id="menu-initial">M</span></span>
+                    <div><b id="menu-name"></b><span id="menu-email"></span></div>
+                </div>
+                <div class="menu-list">
+                    <button id="btn-stats" class="menu-item"><span class="menu-ico"><i class="fas fa-chart-pie"></i></span>Resumo</button>
+                    <button id="btn-surprise" class="menu-item"><span class="menu-ico"><i class="fas fa-dice"></i></span>Não sei onde comer</button>
+                    <button id="btn-export" class="menu-item"><span class="menu-ico"><i class="fas fa-download"></i></span>Exportar backup</button>
+                    <button id="btn-import" class="menu-item"><span class="menu-ico"><i class="fas fa-upload"></i></span>Importar backup</button>
+                    <button id="btn-theme-toggle" class="menu-item" data-keep-open><span class="menu-ico"><i id="theme-toggle-icon" class="fas fa-moon"></i></span><span id="theme-toggle-label">Modo escuro</span></button>
+                    <button id="btn-logout" class="menu-item danger"><span class="menu-ico"><i class="fas fa-arrow-right-from-bracket"></i></span>Sair</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <!-- MODAL DE ADICIONAR / EDITAR -->
-    <div id="entry-modal" class="fixed inset-0 bg-stone-900/30 backdrop-blur-sm hidden items-center justify-center z-50 p-0 sm:p-4">
-        <div class="bg-white dark:bg-stone-800 sm:rounded-2xl shadow-2xl w-full sm:max-w-lg h-full sm:h-auto sm:max-h-[92vh] flex flex-col border-0 sm:border border-rose-100 dark:border-stone-700 overflow-hidden">
-
-            <div class="bg-rose-50 dark:bg-stone-800 p-4 border-b border-rose-100 dark:border-stone-700 flex justify-between items-center">
-                <h2 id="modal-title" class="font-display text-lg font-bold text-rose-700 dark:text-rose-400">Novo Registro</h2>
-                <button onclick="closeModal()" class="text-stone-400 hover:text-rose-600 dark:text-stone-500 dark:hover:text-rose-400 text-2xl leading-none transition">&times;</button>
+    <!-- ADICIONAR / EDITAR REGISTRO -->
+    <div id="entry-modal" class="sheet-root hidden" data-close="closeModal">
+        <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <div class="sheet-grabber"></div>
+            <div class="sheet-head">
+                <h2 id="modal-title" class="sheet-title">Novo registro</h2>
+                <button type="button" class="icon-btn" onclick="closeModal()" aria-label="Fechar"><i class="fas fa-xmark"></i></button>
             </div>
 
-            <div class="flex-1 overflow-y-auto p-5 space-y-5">
-
-                <div>
-                    <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1 uppercase tracking-wider">Cole um texto (opcional)</label>
-                    <textarea id="paste-text" rows="6" placeholder="Restaurante: Nome do restaurante
+            <div class="sheet-body">
+                <details id="paste-details" class="paste">
+                    <summary><i class="fas fa-wand-magic-sparkles"></i>Preencher a partir de um texto<i class="fas fa-chevron-down chev"></i></summary>
+                    <div class="paste-inner">
+                        <textarea id="paste-text" rows="6" class="input" placeholder="Restaurante: Nome do restaurante
 Tipo: Japonesa
 Data: 20/09/2026
-Prato: Nome do prato - Nota (1 a 10)
-Prato: Outro prato - Nota (1 a 10)
-Tags: romântico, leva pet (opcional)
-Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-rose-200 dark:border-stone-600 rounded-lg bg-rose-50/50 dark:bg-stone-900/60 text-stone-800 dark:text-stone-100 focus:border-rose-400 outline-none transition font-mono"></textarea>
-                    <p class="text-[11px] text-stone-400 dark:text-stone-500 mt-1 leading-tight">Use uma linha para cada campo, começando com <span class="text-stone-500 dark:text-stone-400">Restaurante:</span>, <span class="text-stone-500 dark:text-stone-400">Tipo:</span>, <span class="text-stone-500 dark:text-stone-400">Data:</span>, <span class="text-stone-500 dark:text-stone-400">Prato:</span> (uma por prato, terminando com "- Nota", de 1 a 10), <span class="text-stone-500 dark:text-stone-400">Tags:</span> e <span class="text-stone-500 dark:text-stone-400">Obs:</span>. Notas fora de 1 a 10 ficam em branco pra você selecionar na mão.</p>
-                    <button type="button" id="btn-parse" class="mt-2 w-full bg-rose-100/60 dark:bg-stone-700 hover:bg-rose-100 dark:hover:bg-stone-600 text-rose-600 dark:text-rose-400 text-sm font-semibold py-2 rounded-lg transition"><i class="fas fa-wand-magic-sparkles mr-2"></i>Preencher campos com esse texto</button>
-                </div>
+Prato: Nome do prato - 9
+Prato: Outro prato - 7
+Tags: romântico, leva pet
+Obs: comentário livre"></textarea>
+                        <p class="hint">Uma linha por campo. Cada prato termina com "- nota" (1 a 10). Notas fora dessa faixa ficam em branco para você escolher.</p>
+                        <button type="button" id="btn-parse" class="btn btn-soft btn-sm btn-block" style="margin-top:10px">Preencher campos</button>
+                    </div>
+                </details>
 
-                <div class="border-t border-rose-100 dark:border-stone-700 pt-4 space-y-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1 uppercase tracking-wider">Restaurante</label>
-                        <input type="text" id="f-restaurante" maxlength="150" required class="w-full p-2.5 text-sm border border-rose-200 dark:border-stone-600 rounded-lg bg-rose-50/50 dark:bg-stone-900/60 text-stone-800 dark:text-stone-100 focus:border-rose-400 outline-none transition">
+                <div class="field" style="margin-top:20px">
+                    <label class="label" for="f-restaurante">Restaurante</label>
+                    <input type="text" id="f-restaurante" class="input" maxlength="150" required autocomplete="off">
+                </div>
+                <div class="field">
+                    <label class="label" for="f-tipo">Tipo de comida</label>
+                    <select id="f-tipo" class="input"><option value="">Selecione...</option></select>
+                </div>
+                <div class="field-row">
+                    <div class="field">
+                        <label class="label" for="f-data">Data</label>
+                        <input type="date" id="f-data" class="input">
                     </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1 uppercase tracking-wider">Tipo de comida</label>
-                        <select id="f-tipo" class="w-full p-2.5 text-sm border border-rose-200 dark:border-stone-600 rounded-lg bg-rose-50/50 dark:bg-stone-900/60 text-stone-800 dark:text-stone-100 focus:border-rose-400 outline-none transition">
-                            <option value="">Selecione...</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1 uppercase tracking-wider">Data</label>
-                        <input type="date" id="f-data" class="w-full p-2.5 text-sm border border-rose-200 dark:border-stone-600 rounded-lg bg-rose-50/50 dark:bg-stone-900/60 text-stone-800 dark:text-stone-100 focus:border-rose-400 outline-none transition">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1 uppercase tracking-wider">Faixa de preço</label>
-                        <select id="f-preco" class="w-full p-2.5 text-sm border border-rose-200 dark:border-stone-600 rounded-lg bg-rose-50/50 dark:bg-stone-900/60 text-stone-800 dark:text-stone-100 focus:border-rose-400 outline-none transition">
-                            <option value="">Não informado</option>
+                    <div class="field">
+                        <label class="label" for="f-preco">Preço</label>
+                        <select id="f-preco" class="input">
+                            <option value="">—</option>
                             <option value="$">$ · Econômico</option>
                             <option value="$$">$$ · Médio</option>
                             <option value="$$$">$$$ · Caro</option>
                             <option value="$$$$">$$$$ · Muito caro</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1 uppercase tracking-wider">Endereço ou link do Google Maps (opcional)</label>
-                        <input type="text" id="f-endereco" placeholder="Cole o link do Google Maps ou digite o endereço" class="w-full p-2.5 text-sm border border-rose-200 dark:border-stone-600 rounded-lg bg-rose-50/50 dark:bg-stone-900/60 text-stone-800 dark:text-stone-100 focus:border-rose-400 outline-none transition">
-                    </div>
-
-                    <div>
-                        <div class="flex justify-between items-center mb-2">
-                            <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider">Pratos e notas</label>
-                            <button type="button" id="btn-add-prato" class="text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 text-xs transition"><i class="fas fa-plus"></i> Adicionar prato</button>
-                        </div>
-                        <div id="pratos-list" class="space-y-2"></div>
-                    </div>
-
-                    <div>
-                        <div class="flex justify-between items-center mb-2">
-                            <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider">Fotos (opcional)</label>
-                            <button type="button" id="btn-add-foto" class="text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 text-xs transition"><i class="fas fa-camera"></i> Adicionar foto</button>
-                        </div>
-                        <input type="file" id="f-fotos-input" accept="image/*" multiple class="hidden">
-                        <div id="fotos-preview" class="flex flex-wrap gap-2"></div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1 uppercase tracking-wider">Tags (opcional)</label>
-                        <input type="text" id="f-tags" placeholder="ex: romântico, leva pet, grupo grande" class="w-full p-2.5 text-sm border border-rose-200 dark:border-stone-600 rounded-lg bg-rose-50/50 dark:bg-stone-900/60 text-stone-800 dark:text-stone-100 focus:border-rose-400 outline-none transition">
-                        <p class="text-[11px] text-stone-400 dark:text-stone-500 mt-1">Separe por vírgula.</p>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1 uppercase tracking-wider">Observações</label>
-                        <textarea id="f-obs" rows="3" class="w-full p-2.5 text-sm border border-rose-200 dark:border-stone-600 rounded-lg bg-rose-50/50 dark:bg-stone-900/60 text-stone-800 dark:text-stone-100 focus:border-rose-400 outline-none transition"></textarea>
-                    </div>
-
-                    <label class="flex items-center gap-2 text-sm text-stone-600 dark:text-stone-300 cursor-pointer select-none">
-                        <input type="checkbox" id="f-favorito" class="w-4 h-4 rounded border-rose-300 text-rose-500 focus:ring-rose-400">
-                        <span><i class="fas fa-heart text-rose-400 mr-1"></i>Marcar como favorito</span>
-                    </label>
-
                 </div>
+                <div class="field">
+                    <label class="label" for="f-endereco">Endereço ou link do Maps</label>
+                    <input type="text" id="f-endereco" class="input" placeholder="Cole o link ou digite o endereço" autocomplete="off">
+                </div>
+
+                <div class="section-head">
+                    <span class="label">Pratos e notas</span>
+                    <button type="button" id="btn-add-prato" class="link-btn"><i class="fas fa-plus"></i>Prato</button>
+                </div>
+                <div id="pratos-list"></div>
+
+                <div class="section-head">
+                    <span class="label">Fotos</span>
+                </div>
+                <input type="file" id="f-fotos-input" accept="image/*" multiple class="hidden">
+                <div class="photo-row">
+                    <button type="button" id="btn-add-foto" class="photo-add" aria-label="Adicionar foto"><i class="fas fa-camera"></i></button>
+                    <div id="fotos-preview"></div>
+                </div>
+
+                <div class="field" style="margin-top:22px">
+                    <label class="label" for="f-tags">Tags</label>
+                    <input type="text" id="f-tags" class="input" placeholder="romântico, leva pet, grupo grande" autocomplete="off">
+                    <p class="hint">Separe por vírgula.</p>
+                </div>
+                <div class="field">
+                    <label class="label" for="f-obs">Observações</label>
+                    <textarea id="f-obs" rows="3" class="input"></textarea>
+                </div>
+
+                <label class="switch-row">
+                    <span><i class="fas fa-heart"></i>Favorito</span>
+                    <input type="checkbox" id="f-favorito" class="switch">
+                </label>
+
+                <button id="btn-delete-entry" type="button" class="btn btn-danger btn-block hidden" style="margin-top:22px"><i class="fas fa-trash"></i>Excluir registro</button>
             </div>
 
-            <div class="p-4 border-t border-rose-100 dark:border-stone-700 bg-rose-50 dark:bg-stone-800 flex justify-between gap-3">
-                <button id="btn-delete-entry" class="hidden px-4 py-2.5 text-red-500 dark:text-red-400 font-semibold hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition text-sm"><i class="fas fa-trash mr-1"></i> Excluir</button>
-                <div class="flex gap-3 ml-auto">
-                    <button onclick="closeModal()" class="px-4 py-2.5 text-stone-600 dark:text-stone-300 font-semibold hover:bg-rose-100 dark:hover:bg-stone-700 rounded-lg transition text-sm">Cancelar</button>
-                    <button id="btn-save-entry" class="px-6 py-2.5 bg-rose-500 text-white font-bold rounded-lg shadow-lg shadow-rose-200/50 hover:bg-rose-400 transition text-sm">Salvar</button>
-                </div>
+            <div class="sheet-foot">
+                <button type="button" id="btn-save-entry" class="btn btn-primary">Salvar</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL DE PERFIL DO RESTAURANTE (histórico de visitas) -->
-    <div id="profile-modal" class="fixed inset-0 bg-stone-900/30 backdrop-blur-sm hidden items-center justify-center z-50 p-0 sm:p-4">
-        <div class="bg-white dark:bg-stone-800 sm:rounded-2xl shadow-2xl w-full sm:max-w-lg h-full sm:h-auto sm:max-h-[92vh] flex flex-col border-0 sm:border border-rose-100 dark:border-stone-700 overflow-hidden">
-
-            <div class="bg-rose-50 dark:bg-stone-800 p-4 border-b border-rose-100 dark:border-stone-700 flex justify-between items-start gap-2">
-                <div class="min-w-0">
-                    <h2 id="profile-title" class="font-display text-lg font-bold text-rose-700 dark:text-rose-400 truncate">Restaurante</h2>
-                    <div id="profile-subtitle" class="text-xs text-stone-500 dark:text-stone-400 mt-1.5 flex flex-wrap items-center gap-1"></div>
+    <!-- PERFIL DO RESTAURANTE (histórico de visitas) -->
+    <div id="profile-modal" class="sheet-root hidden" data-close="closeProfileModal">
+        <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="profile-title">
+            <div class="sheet-grabber"></div>
+            <div class="sheet-head">
+                <div style="min-width:0">
+                    <h2 id="profile-title" class="sheet-title">Restaurante</h2>
+                    <div id="profile-subtitle" class="sheet-sub"></div>
                 </div>
-                <button onclick="closeProfileModal()" class="text-stone-400 hover:text-rose-600 dark:text-stone-500 dark:hover:text-rose-400 text-2xl leading-none transition flex-shrink-0">&times;</button>
+                <button type="button" class="icon-btn" onclick="closeProfileModal()" aria-label="Fechar"><i class="fas fa-xmark"></i></button>
             </div>
-
-            <div id="profile-body" class="flex-1 overflow-y-auto p-5 space-y-2"></div>
-
-            <div class="p-4 border-t border-rose-100 dark:border-stone-700 bg-rose-50 dark:bg-stone-800">
-                <button id="btn-profile-add-visit" type="button" class="w-full px-6 py-2.5 bg-rose-500 text-white font-bold rounded-lg shadow-lg shadow-rose-200/50 hover:bg-rose-400 transition text-sm"><i class="fas fa-plus mr-1"></i> Registrar nova visita aqui</button>
+            <div id="profile-body" class="sheet-body"></div>
+            <div class="sheet-foot">
+                <button id="btn-profile-add-visit" type="button" class="btn btn-primary"><i class="fas fa-plus"></i>Registrar nova visita</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL DA LISTA DE DESEJOS (adicionar/editar um restaurante que quer visitar) -->
-    <div id="wishlist-modal" class="fixed inset-0 bg-stone-900/30 backdrop-blur-sm hidden items-center justify-center z-50 p-0 sm:p-4">
-        <div class="bg-white dark:bg-stone-800 sm:rounded-2xl shadow-2xl w-full sm:max-w-lg h-full sm:h-auto sm:max-h-[92vh] flex flex-col border-0 sm:border border-rose-100 dark:border-stone-700 overflow-hidden">
-
-            <div class="bg-rose-50 dark:bg-stone-800 p-4 border-b border-rose-100 dark:border-stone-700 flex justify-between items-center">
-                <h2 id="wishlist-modal-title" class="font-display text-lg font-bold text-rose-700 dark:text-rose-400">Quero visitar</h2>
-                <button onclick="closeWishlistModal()" class="text-stone-400 hover:text-rose-600 dark:text-stone-500 dark:hover:text-rose-400 text-2xl leading-none transition">&times;</button>
+    <!-- LISTA DE DESEJOS (adicionar/editar) -->
+    <div id="wishlist-modal" class="sheet-root hidden" data-close="closeWishlistModal">
+        <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="wishlist-modal-title">
+            <div class="sheet-grabber"></div>
+            <div class="sheet-head">
+                <h2 id="wishlist-modal-title" class="sheet-title">Quero visitar</h2>
+                <button type="button" class="icon-btn" onclick="closeWishlistModal()" aria-label="Fechar"><i class="fas fa-xmark"></i></button>
             </div>
-
-            <div class="flex-1 overflow-y-auto p-5 space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1 uppercase tracking-wider">Restaurante</label>
-                    <input type="text" id="w-nome" maxlength="150" required class="w-full p-2.5 text-sm border border-rose-200 dark:border-stone-600 rounded-lg bg-rose-50/50 dark:bg-stone-900/60 text-stone-800 dark:text-stone-100 focus:border-rose-400 outline-none transition">
+            <div class="sheet-body">
+                <div class="field">
+                    <label class="label" for="w-nome">Restaurante</label>
+                    <input type="text" id="w-nome" class="input" maxlength="150" required autocomplete="off">
                 </div>
-                <div>
-                    <label class="block text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1 uppercase tracking-wider">Por que quer ir? (opcional)</label>
-                    <textarea id="w-motivo" rows="3" placeholder="ex: viram no Instagram, recomendação de alguém..." class="w-full p-2.5 text-sm border border-rose-200 dark:border-stone-600 rounded-lg bg-rose-50/50 dark:bg-stone-900/60 text-stone-800 dark:text-stone-100 focus:border-rose-400 outline-none transition"></textarea>
+                <div class="field">
+                    <label class="label" for="w-motivo">Por que quer ir?</label>
+                    <textarea id="w-motivo" rows="3" class="input" placeholder="Viram no Instagram, alguém recomendou..."></textarea>
                 </div>
+                <button id="btn-delete-wish" type="button" class="btn btn-danger btn-block hidden" style="margin-top:22px"><i class="fas fa-trash"></i>Excluir da lista</button>
             </div>
-
-            <div class="p-4 border-t border-rose-100 dark:border-stone-700 bg-rose-50 dark:bg-stone-800 flex justify-between gap-3">
-                <button id="btn-delete-wish" class="hidden px-4 py-2.5 text-red-500 dark:text-red-400 font-semibold hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition text-sm"><i class="fas fa-trash mr-1"></i> Excluir</button>
-                <div class="flex gap-3 ml-auto">
-                    <button onclick="closeWishlistModal()" class="px-4 py-2.5 text-stone-600 dark:text-stone-300 font-semibold hover:bg-rose-100 dark:hover:bg-stone-700 rounded-lg transition text-sm">Cancelar</button>
-                    <button id="btn-save-wish" class="px-6 py-2.5 bg-rose-500 text-white font-bold rounded-lg shadow-lg shadow-rose-200/50 hover:bg-rose-400 transition text-sm">Salvar</button>
-                </div>
+            <div class="sheet-foot">
+                <button type="button" id="btn-save-wish" class="btn btn-primary">Salvar</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL DE ESTATÍSTICAS / RESUMO -->
-    <div id="stats-modal" class="fixed inset-0 bg-stone-900/30 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-        <div class="bg-white dark:bg-stone-800 rounded-2xl shadow-2xl w-full max-w-sm border border-rose-100 dark:border-stone-700 overflow-hidden max-h-[85vh] flex flex-col">
-            <div class="bg-rose-50 dark:bg-stone-800 p-4 border-b border-rose-100 dark:border-stone-700 flex justify-between items-center">
-                <h2 class="font-display text-lg font-bold text-rose-700 dark:text-rose-400"><i class="fas fa-chart-pie mr-1 text-amber-500"></i> Resumo</h2>
-                <button onclick="closeStatsModal()" class="text-stone-400 hover:text-rose-600 dark:text-stone-500 dark:hover:text-rose-400 text-2xl leading-none transition">&times;</button>
+    <!-- RESUMO / ESTATÍSTICAS -->
+    <div id="stats-modal" class="sheet-root hidden" data-close="closeStatsModal">
+        <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="stats-title">
+            <div class="sheet-grabber"></div>
+            <div class="sheet-head">
+                <h2 id="stats-title" class="sheet-title">Resumo</h2>
+                <button type="button" class="icon-btn" onclick="closeStatsModal()" aria-label="Fechar"><i class="fas fa-xmark"></i></button>
             </div>
-            <div id="stats-body" class="p-5 space-y-2 overflow-y-auto"></div>
+            <div id="stats-body" class="sheet-body"></div>
         </div>
     </div>
 
-    <!-- MODAL "NÃO SEI ONDE COMER" (sorteia um item da lista de desejos) -->
-    <div id="surprise-modal" class="fixed inset-0 bg-stone-900/30 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-        <div class="bg-white dark:bg-stone-800 rounded-2xl shadow-2xl w-full max-w-sm border border-rose-100 dark:border-stone-700 overflow-hidden">
-            <div class="bg-rose-50 dark:bg-stone-800 p-4 border-b border-rose-100 dark:border-stone-700 flex justify-between items-center">
-                <h2 class="font-display text-lg font-bold text-rose-700 dark:text-rose-400"><i class="fas fa-dice mr-1 text-amber-500"></i> Não sei onde comer</h2>
-                <button onclick="closeSurpriseModal()" class="text-stone-400 hover:text-rose-600 dark:text-stone-500 dark:hover:text-rose-400 text-2xl leading-none transition">&times;</button>
+    <!-- "NÃO SEI ONDE COMER" -->
+    <div id="surprise-modal" class="sheet-root hidden" data-close="closeSurpriseModal">
+        <div class="sheet" role="dialog" aria-modal="true" aria-label="Não sei onde comer">
+            <div class="sheet-grabber"></div>
+            <div class="sheet-head">
+                <h2 class="sheet-title">Hoje vai ser…</h2>
+                <button type="button" class="icon-btn" onclick="closeSurpriseModal()" aria-label="Fechar"><i class="fas fa-xmark"></i></button>
             </div>
-            <div class="p-6 text-center">
-                <div id="surprise-nome" class="font-display text-2xl font-bold text-rose-700 dark:text-rose-400 mb-2"></div>
-                <div id="surprise-motivo" class="text-sm text-stone-500 dark:text-stone-400"></div>
+            <div class="sheet-body">
+                <div class="surprise">
+                    <div class="empty-icon"><i class="fas fa-dice"></i></div>
+                    <div id="surprise-nome" class="surprise-nome"></div>
+                    <div id="surprise-motivo" class="surprise-motivo"></div>
+                </div>
             </div>
-            <div class="p-4 border-t border-rose-100 dark:border-stone-700 bg-rose-50 dark:bg-stone-800 space-y-2">
-                <button type="button" id="btn-surprise-again" class="w-full px-6 py-2.5 bg-white dark:bg-stone-700 border border-rose-200 dark:border-stone-600 text-rose-600 dark:text-rose-400 font-bold rounded-lg hover:bg-rose-50 dark:hover:bg-stone-600 transition text-sm"><i class="fas fa-shuffle mr-1"></i> Sortear de novo</button>
-                <button type="button" id="btn-surprise-visit" class="w-full px-6 py-2.5 bg-rose-500 text-white font-bold rounded-lg shadow-lg shadow-rose-200/50 hover:bg-rose-400 transition text-sm"><i class="fas fa-utensils mr-1"></i> Vamos lá! Registrar visita</button>
+            <div class="sheet-foot" style="flex-direction:column">
+                <button type="button" id="btn-surprise-visit" class="btn btn-primary"><i class="fas fa-utensils"></i>Vamos lá! Registrar visita</button>
+                <button type="button" id="btn-surprise-again" class="btn btn-ghost"><i class="fas fa-shuffle"></i>Sortear de novo</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL DE VISUALIZAÇÃO DE FOTO (lightbox) -->
-    <div id="photo-viewer-modal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-[60] p-4" onclick="if(event.target===this) closePhotoViewer()">
-        <button type="button" onclick="closePhotoViewer()" class="absolute top-4 right-4 text-white/80 hover:text-white text-2xl leading-none z-10"><i class="fas fa-xmark"></i></button>
-        <button type="button" id="photo-viewer-prev" onclick="photoViewerNav(-1)" class="hidden absolute left-2 sm:left-4 text-white/80 hover:text-white text-3xl leading-none z-10 p-2"><i class="fas fa-chevron-left"></i></button>
-        <img id="photo-viewer-img" src="" class="max-w-full max-h-full rounded-lg object-contain">
-        <button type="button" id="photo-viewer-next" onclick="photoViewerNav(1)" class="hidden absolute right-2 sm:right-4 text-white/80 hover:text-white text-3xl leading-none z-10 p-2"><i class="fas fa-chevron-right"></i></button>
-        <div id="photo-viewer-count" class="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/70 text-xs"></div>
+    <!-- FOTO EM TELA CHEIA -->
+    <div id="photo-viewer-modal" class="viewer hidden" data-close="closePhotoViewer">
+        <button type="button" class="v-btn v-close" onclick="closePhotoViewer()" aria-label="Fechar"><i class="fas fa-xmark"></i></button>
+        <button type="button" id="photo-viewer-prev" class="v-btn v-prev hidden" onclick="photoViewerNav(-1)" aria-label="Foto anterior"><i class="fas fa-chevron-left"></i></button>
+        <img id="photo-viewer-img" src="" alt="">
+        <button type="button" id="photo-viewer-next" class="v-btn v-next hidden" onclick="photoViewerNav(1)" aria-label="Próxima foto"><i class="fas fa-chevron-right"></i></button>
+        <div id="photo-viewer-count" class="v-count"></div>
     </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -324,9 +693,7 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
         import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         // =====================================================================
-        // PREENCHA AQUI com a config do SEU projeto Firebase (Project settings
-        // -> General -> Your apps -> SDK setup and configuration). Use um
-        // projeto Firebase NOVO e separado do projeto do trabalho.
+        // Config do projeto Firebase (Project settings -> General -> Your apps).
         // =====================================================================
         const firebaseConfig = {
             apiKey: "AIzaSyAWGSmq8bRVkHdutBp3ZHMZ3kdtmUoSxtU",
@@ -377,7 +744,9 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
         let wishlist = [];               // registros da coleção "desejos" (lista de restaurantes a visitar)
         let draftWishId = null;          // id do item de desejo sendo criado/editado no modal
         let isEditingWish = false;
+        let pendingWishId = null;        // desejo que só sai da lista quando a visita for realmente salva
         let unsubscribeWishlistSnapshot = null;
+        let unsubscribeSnapshot = null;
 
         // Tipos de comida disponíveis para cadastro e filtro
         const TIPOS_COMIDA = [
@@ -386,30 +755,38 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             'Francesa', 'Padaria/Cafeteria', 'Doceria/Sorveteria', 'Outro'
         ];
 
+        // Ícone de cada tipo de comida (usado quando o registro não tem foto)
+        const TIPO_ICONS = {
+            'Brasileira': 'fa-utensils', 'Italiana': 'fa-bowl-food', 'Japonesa': 'fa-fish', 'Árabe': 'fa-utensils',
+            'Hambúrguer': 'fa-burger', 'Pizza': 'fa-pizza-slice', 'Poke': 'fa-fish', 'Chinesa': 'fa-bowl-rice',
+            'Mexicana': 'fa-pepper-hot', 'Churrascaria': 'fa-drumstick-bite', 'Vegetariana/Vegana': 'fa-leaf',
+            'Francesa': 'fa-wine-glass', 'Padaria/Cafeteria': 'fa-mug-hot', 'Doceria/Sorveteria': 'fa-ice-cream', 'Outro': 'fa-utensils'
+        };
+
         // Normaliza o nome do restaurante para agrupar visitas do mesmo lugar
         // mesmo com pequenas diferenças de maiúsculas/espaços.
         const normalizeName = (s) => (s || '').trim().toLowerCase();
 
+        // ===================== NOTAS =====================
+        const parseNota = (s) => parseFloat(String(s ?? '').trim().replace(',', '.'));
         // Cor de acordo com a nota: < 5 vermelho, 5 a 7 laranja, 8 a 10 verde
-        const notaBadgeClasses = (notaStr) => {
-            if (!notaStr) return 'bg-rose-50/60 dark:bg-stone-900/40 border-rose-100 dark:border-stone-600 text-stone-600 dark:text-stone-400';
-            const num = parseFloat(String(notaStr).trim().replace(',', '.'));
-            if (isNaN(num)) return 'bg-rose-50/60 dark:bg-stone-900/40 border-rose-100 dark:border-stone-600 text-stone-600 dark:text-stone-400';
-            if (num < 5) return 'bg-red-50 dark:bg-red-950/30 border-red-300 dark:border-red-800 text-red-600 dark:text-red-400';
-            if (num < 8) return 'bg-orange-50 dark:bg-orange-950/30 border-orange-300 dark:border-orange-800 text-orange-600 dark:text-orange-400';
-            return 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400';
+        const toneOf = (num) => {
+            if (num === null || num === undefined || isNaN(num)) return 'tone-none';
+            if (num < 5) return 'tone-bad';
+            if (num < 8) return 'tone-mid';
+            return 'tone-good';
         };
+        const notaTone = (notaStr) => toneOf(parseNota(notaStr));
+        const fmtNota = (n) => Number.isInteger(n) ? String(n) : n.toFixed(1).replace('.', ',');
 
         // Nota média de um registro (visita), a partir das notas numéricas dos pratos dela
         const getEntryAvgNota = (en) => {
             const pratos = Array.isArray(en.pratos) ? en.pratos : [];
-            const nums = pratos
-                .map(p => parseFloat(String(p.nota || '').trim().replace(',', '.')))
-                .filter(n => !isNaN(n));
+            const nums = pratos.map(p => parseNota(p.nota)).filter(n => !isNaN(n));
             return nums.length ? nums.reduce((s, n) => s + n, 0) / nums.length : null;
         };
 
-        // Faixa (ruim/médio/bom) de uma nota média, nas mesmas faixas usadas nos badges
+        // Faixa (ruim/médio/bom) de uma nota média, nas mesmas faixas usadas nas cores
         const getNotaBucket = (avg) => {
             if (avg === null || avg === undefined) return null;
             if (avg < 5) return 'ruim';
@@ -418,9 +795,9 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
         };
 
         const NOTA_BUCKETS = [
-            { key: 'ruim', label: 'Ruins', activeCls: 'bg-red-500 text-white border-transparent', inactiveCls: 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:border-red-400' },
-            { key: 'medio', label: 'Médios', activeCls: 'bg-orange-500 text-white border-transparent', inactiveCls: 'bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800 text-orange-600 dark:text-orange-400 hover:border-orange-400' },
-            { key: 'bom', label: 'Bons', activeCls: 'bg-emerald-500 text-white border-transparent', inactiveCls: 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 hover:border-emerald-400' }
+            { key: 'ruim', label: 'Ruins', tone: 'tone-bad' },
+            { key: 'medio', label: 'Médios', tone: 'tone-mid' },
+            { key: 'bom', label: 'Bons', tone: 'tone-good' }
         ];
 
         // SEGURANÇA: escapa qualquer valor antes de inseri-lo via innerHTML,
@@ -446,6 +823,28 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(trimmed)}`;
         };
 
+        // ===================== DATAS =====================
+        // Data de hoje no fuso do aparelho. (toISOString usa UTC e, no Brasil,
+        // depois das 21h já devolveria o dia seguinte.)
+        const todayLocal = () => {
+            const d = new Date();
+            const p = (n) => String(n).padStart(2, '0');
+            return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+        };
+        const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+        const formatDateBR = (isoDate) => {
+            const parts = String(isoDate || '').split('-');
+            if (parts.length !== 3) return isoDate || '';
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        };
+        const formatDateShort = (isoDate) => {
+            const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate || '');
+            if (!m) return isoDate || '';
+            const mes = MESES[parseInt(m[2], 10) - 1];
+            return mes ? `${parseInt(m[3], 10)} ${mes} ${m[1]}` : formatDateBR(isoDate);
+        };
+
+        // ===================== ELEMENTOS =====================
         const loginScreen = document.getElementById('login-screen');
         const appDiv = document.getElementById('app');
         const btnOpenAdd = document.getElementById('btn-open-add');
@@ -455,6 +854,7 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
         const filterChipsEl = document.getElementById('filter-chips');
         const notaFilterChipsEl = document.getElementById('nota-filter-chips');
         const sortSelect = document.getElementById('sort-select');
+        const sortLabel = document.getElementById('sort-label');
         const sortRow = document.getElementById('sort-row');
         const btnToggleFavoritos = document.getElementById('btn-toggle-favoritos');
         const btnExport = document.getElementById('btn-export');
@@ -463,13 +863,25 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
         const btnStats = document.getElementById('btn-stats');
         const btnThemeToggle = document.getElementById('btn-theme-toggle');
         const themeToggleIcon = document.getElementById('theme-toggle-icon');
+        const themeToggleLabel = document.getElementById('theme-toggle-label');
         const tabVisitados = document.getElementById('tab-visitados');
         const tabDesejos = document.getElementById('tab-desejos');
         const wishlistListEl = document.getElementById('wishlist-list');
         const wishlistEmptyState = document.getElementById('wishlist-empty-state');
         const wishlistPermissionError = document.getElementById('wishlist-permission-error');
         const greetingText = document.getElementById('greeting-text');
-        let unsubscribeSnapshot = null;
+        const pageTitle = document.getElementById('page-title');
+        const searchInput = document.getElementById('search-input');
+        const toastEl = document.getElementById('toast');
+
+        // Aviso rápido no rodapé (substitui os alert() de sucesso)
+        let toastTimer = null;
+        const toast = (msg) => {
+            toastEl.textContent = msg;
+            toastEl.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2400);
+        };
 
         // ===================== SAUDAÇÃO PERSONALIZADA =====================
         // Só existem duas contas (a do Matheus e a da Naju, criadas manualmente
@@ -478,21 +890,25 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
         const EMAIL_MATHEUS = 'matheusdfagundes2612@gmail.com';
         const getFirstName = (email) => ((email || '').toLowerCase() === EMAIL_MATHEUS ? 'Matheus' : 'Naju');
         const GREETINGS = [
-            'O que vamos comer hoje? 🍽️',
-            'Bora registrar o próximo lugar? 💕',
+            'O que vamos comer hoje?',
+            'Bora registrar o próximo lugar?',
             'Com fome de quê hoje?'
         ];
         const updateGreeting = (email) => {
-            if (!greetingText) return;
             const nome = getFirstName(email);
             const frase = GREETINGS[Math.floor(Math.random() * GREETINGS.length)];
             greetingText.textContent = `Oi, ${nome}! ${frase}`;
+            document.getElementById('avatar-initial').textContent = nome[0];
+            document.getElementById('menu-initial').textContent = nome[0];
+            document.getElementById('menu-name').textContent = nome;
+            document.getElementById('menu-email').textContent = email || '';
         };
 
         // ===================== TEMA CLARO/ESCURO =====================
         const applyThemeIcon = () => {
             const isDark = document.documentElement.classList.contains('dark');
             themeToggleIcon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+            themeToggleLabel.textContent = isDark ? 'Modo claro' : 'Modo escuro';
             const meta = document.querySelector('meta[name="theme-color"]');
             if (meta) meta.setAttribute('content', isDark ? '#1c1917' : '#fdf1f4');
         };
@@ -504,6 +920,28 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             applyThemeIcon();
         });
 
+        // ===================== SHEETS: fechar por fora, Esc e menu =====================
+        document.addEventListener('click', (e) => {
+            const root = e.target.closest('[data-close]');
+            if (root && e.target === root && typeof window[root.dataset.close] === 'function') window[root.dataset.close]();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape') return;
+            const abertos = [...document.querySelectorAll('[data-close]:not(.hidden)')];
+            const topo = abertos[abertos.length - 1];
+            if (topo && typeof window[topo.dataset.close] === 'function') window[topo.dataset.close]();
+        });
+
+        const menuModal = document.getElementById('menu-modal');
+        window.openMenuModal = () => { menuModal.classList.remove('hidden'); menuModal.classList.add('flex'); };
+        window.closeMenuModal = () => { menuModal.classList.add('hidden'); menuModal.classList.remove('flex'); };
+        document.getElementById('btn-menu').addEventListener('click', window.openMenuModal);
+        // Qualquer ação do menu (menos o tema) fecha o menu; a própria ação roda no listener do botão.
+        menuModal.addEventListener('click', (e) => {
+            const item = e.target.closest('.menu-item');
+            if (item && !item.hasAttribute('data-keep-open')) window.closeMenuModal();
+        });
+
         // Ordenação da lista de registros
         const SORTERS = {
             recentes: (a, b) => (b.data || '').localeCompare(a.data || '') || (b.createdAt || '').localeCompare(a.createdAt || ''),
@@ -513,19 +951,16 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             az: (a, b) => (a.restaurante || '').localeCompare(b.restaurante || '', 'pt-BR')
         };
 
+        const syncSortLabel = () => { sortLabel.textContent = sortSelect.options[sortSelect.selectedIndex].text; };
         sortSelect.addEventListener('change', (e) => {
             sortBy = e.target.value;
+            syncSortLabel();
             renderCards();
         });
 
-        // Alterna a UI do botão de favoritos entre ativo/inativo. Usa troca
-        // completa de className (em vez de classList.add/remove parcial) pra
-        // não depender da ordem de geração das classes do Tailwind, inclusive
-        // com as variantes de tema escuro.
-        const FAV_TOGGLE_ACTIVE_CLS = 'flex-shrink-0 w-9 h-9 rounded-lg transition flex items-center justify-center bg-rose-500 border border-rose-500 text-white';
-        const FAV_TOGGLE_INACTIVE_CLS = 'flex-shrink-0 w-9 h-9 rounded-lg transition flex items-center justify-center bg-white border border-rose-200 text-stone-400 hover:text-rose-500 hover:border-rose-300 dark:bg-stone-800 dark:border-stone-600 dark:text-stone-500 dark:hover:text-rose-400 dark:hover:border-stone-500';
+        // Filtro "somente favoritos"
         const updateFavoritosToggleUI = () => {
-            btnToggleFavoritos.className = filterFavoritos ? FAV_TOGGLE_ACTIVE_CLS : FAV_TOGGLE_INACTIVE_CLS;
+            btnToggleFavoritos.classList.toggle('is-active', filterFavoritos);
         };
         updateFavoritosToggleUI();
 
@@ -536,17 +971,15 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
         });
 
         // ===================== ABAS: VISITADOS / QUERO VISITAR =====================
-        const TAB_ACTIVE_CLS = 'tab-btn flex-1 py-2 rounded-lg text-sm font-semibold transition bg-rose-500 text-white shadow shadow-rose-200/50 dark:shadow-black/30';
-        const TAB_INACTIVE_CLS = 'tab-btn flex-1 py-2 rounded-lg text-sm font-semibold transition bg-white text-stone-500 border border-rose-200 hover:border-rose-300 dark:bg-stone-800 dark:text-stone-400 dark:border-stone-600 dark:hover:border-stone-500';
-        tabVisitados.textContent = 'Visitados';
-        tabDesejos.textContent = 'Quero visitar';
-
         const setActiveTab = (tab) => {
             currentTab = tab;
-            tabVisitados.className = tab === 'visitados' ? TAB_ACTIVE_CLS : TAB_INACTIVE_CLS;
-            tabDesejos.className = tab === 'desejos' ? TAB_ACTIVE_CLS : TAB_INACTIVE_CLS;
-
             const isVisitados = tab === 'visitados';
+            tabVisitados.classList.toggle('active', isVisitados);
+            tabDesejos.classList.toggle('active', !isVisitados);
+            tabVisitados.setAttribute('aria-current', isVisitados ? 'page' : 'false');
+            tabDesejos.setAttribute('aria-current', isVisitados ? 'false' : 'page');
+            pageTitle.textContent = isVisitados ? 'Visitados' : 'Quero visitar';
+
             sortRow.classList.toggle('hidden', !isVisitados);
             cardsList.classList.toggle('hidden', !isVisitados);
             wishlistListEl.classList.toggle('hidden', isVisitados);
@@ -556,8 +989,6 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             } else {
                 emptyState.classList.add('hidden');
                 permissionError.classList.add('hidden');
-                filterChipsEl.classList.add('hidden');
-                notaFilterChipsEl.classList.add('hidden');
             }
 
             if (isVisitados) renderCards(); else renderWishlist();
@@ -565,11 +996,6 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
 
         tabVisitados.addEventListener('click', () => setActiveTab('visitados'));
         tabDesejos.addEventListener('click', () => setActiveTab('desejos'));
-        // Só ajusta a aparência dos botões aqui (a aba "visitados" já começa
-        // visível no HTML por padrão); renderCards/renderWishlist ainda não
-        // existem neste ponto do script, então não chamamos setActiveTab().
-        tabVisitados.className = TAB_ACTIVE_CLS;
-        tabDesejos.className = TAB_INACTIVE_CLS;
 
         // Marca/desmarca um registro como favorito direto pelo card, sem
         // precisar abrir o modal de edição.
@@ -580,6 +1006,7 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                 await updateDoc(doc(db, "avaliacoes", id), { favorito: !en.favorito });
             } catch (err) {
                 console.error('Erro ao marcar favorito:', err);
+                toast('Não foi possível favoritar');
             }
         };
 
@@ -609,7 +1036,7 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             } else if (navigator.clipboard && navigator.clipboard.writeText) {
                 try {
                     await navigator.clipboard.writeText(texto);
-                    alert('Texto copiado! Agora é só colar onde quiser mandar.');
+                    toast('Texto copiado! Agora é só colar.');
                 } catch (err) {
                     alert(texto);
                 }
@@ -632,11 +1059,12 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `majuchef-backup-${new Date().toISOString().slice(0, 10)}.json`;
+            a.download = `majuchef-backup-${todayLocal()}.json`;
             document.body.appendChild(a);
             a.click();
             a.remove();
             URL.revokeObjectURL(url);
+            toast('Backup exportado');
         });
 
         // Importa um arquivo .json exportado pelo próprio MajuChef, restaurando
@@ -671,7 +1099,7 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                     const { id, ...rest } = w;
                     await setDoc(doc(db, "desejos", id), rest);
                 }
-                alert('Backup importado com sucesso!');
+                toast('Backup importado com sucesso');
             } catch (err) {
                 console.error('Erro ao importar backup:', err);
                 alert('Não foi possível importar esse arquivo. Confira se é um backup exportado pelo próprio MajuChef, e se a coleção "desejos" já está liberada nas regras do Firestore.');
@@ -687,9 +1115,11 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             tipoSelect.appendChild(opt);
         });
 
-        // Chips de filtro por tipo de comida (só mostra os tipos que existem nos registros)
+        // Chips de filtro por tipo de comida (só mostra os tipos que existem nos registros).
+        // Tocar de novo no chip ativo desfaz o filtro.
         const renderFilterChips = () => {
             const presentTipos = TIPOS_COMIDA.filter(t => entries.some(en => en.tipo === t));
+            if (filterTipo && !presentTipos.includes(filterTipo)) filterTipo = '';
             if (presentTipos.length === 0) {
                 filterChipsEl.innerHTML = '';
                 filterChipsEl.classList.add('hidden');
@@ -698,26 +1128,22 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             }
             filterChipsEl.classList.remove('hidden');
             filterChipsEl.classList.add('flex');
-            const chipClass = (active) => active
-                ? 'px-3 py-1.5 rounded-full text-xs font-semibold bg-rose-500 text-white transition'
-                : 'px-3 py-1.5 rounded-full text-xs font-semibold bg-white dark:bg-stone-800 border border-rose-200 dark:border-stone-600 text-stone-500 dark:text-stone-400 hover:border-rose-400 transition';
-            let html = `<button type="button" data-tipo="" class="${chipClass(filterTipo === '')}">Todos</button>`;
-            presentTipos.forEach(t => {
-                html += `<button type="button" data-tipo="${escapeHtml(t)}" class="${chipClass(filterTipo === t)}">${escapeHtml(t)}</button>`;
-            });
-            filterChipsEl.innerHTML = html;
+            filterChipsEl.innerHTML = presentTipos.map(t =>
+                `<button type="button" data-tipo="${escapeHtml(t)}" class="chip ${filterTipo === t ? 'is-active' : ''}">${escapeHtml(t)}</button>`
+            ).join('');
         };
 
         filterChipsEl.addEventListener('click', (e) => {
             const btn = e.target.closest('button[data-tipo]');
             if (!btn) return;
-            filterTipo = btn.dataset.tipo;
+            filterTipo = filterTipo === btn.dataset.tipo ? '' : btn.dataset.tipo;
             renderCards();
         });
 
         // Chips de filtro por faixa de nota (só mostra as faixas que existem nos registros)
         const renderNotaFilterChips = () => {
             const presentBuckets = new Set(entries.map(en => getNotaBucket(getEntryAvgNota(en))).filter(Boolean));
+            if (filterNota && !presentBuckets.has(filterNota)) filterNota = '';
             if (presentBuckets.size === 0) {
                 notaFilterChipsEl.innerHTML = '';
                 notaFilterChipsEl.classList.add('hidden');
@@ -726,20 +1152,15 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             }
             notaFilterChipsEl.classList.remove('hidden');
             notaFilterChipsEl.classList.add('flex');
-            const baseCls = 'px-3 py-1.5 rounded-full text-xs font-semibold border transition';
-            let html = `<button type="button" data-nota="" class="${baseCls} ${filterNota === '' ? 'bg-rose-500 text-white border-transparent' : 'bg-white dark:bg-stone-800 border-rose-200 dark:border-stone-600 text-stone-500 dark:text-stone-400 hover:border-rose-400'}">Todos</button>`;
-            NOTA_BUCKETS.forEach(b => {
-                if (!presentBuckets.has(b.key)) return;
-                const active = filterNota === b.key;
-                html += `<button type="button" data-nota="${b.key}" class="${baseCls} ${active ? b.activeCls : b.inactiveCls}">${b.label}</button>`;
-            });
-            notaFilterChipsEl.innerHTML = html;
+            notaFilterChipsEl.innerHTML = NOTA_BUCKETS.filter(b => presentBuckets.has(b.key)).map(b =>
+                `<button type="button" data-nota="${b.key}" class="chip ${b.tone} ${filterNota === b.key ? 'is-active' : ''}">${b.label}</button>`
+            ).join('');
         };
 
         notaFilterChipsEl.addEventListener('click', (e) => {
             const btn = e.target.closest('button[data-nota]');
             if (!btn) return;
-            filterNota = btn.dataset.nota;
+            filterNota = filterNota === btn.dataset.nota ? '' : btn.dataset.nota;
             renderCards();
         });
 
@@ -749,7 +1170,6 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                 currentUser = user;
                 loginScreen.classList.add('hidden');
                 appDiv.classList.remove('hidden');
-                btnOpenAdd.classList.remove('hidden');
                 updateGreeting(user.email);
                 loadEntries();
                 loadWishlist();
@@ -767,8 +1187,9 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                 filterNota = '';
                 filterFavoritos = false;
                 sortBy = 'recentes';
-                document.getElementById('search-input').value = '';
+                searchInput.value = '';
                 sortSelect.value = 'recentes';
+                syncSortLabel();
                 updateFavoritosToggleUI();
                 cardsList.innerHTML = '';
                 wishlistListEl.innerHTML = '';
@@ -782,16 +1203,19 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                 permissionError.classList.add('hidden');
                 wishlistEmptyState.classList.add('hidden');
                 wishlistPermissionError.classList.add('hidden');
-                if (greetingText) greetingText.textContent = '';
-                tabVisitados.className = TAB_ACTIVE_CLS;
-                tabDesejos.className = TAB_INACTIVE_CLS;
+                greetingText.textContent = '';
+                document.getElementById('menu-name').textContent = '';
+                document.getElementById('menu-email').textContent = '';
                 currentTab = 'visitados';
+                tabVisitados.classList.add('active');
+                tabDesejos.classList.remove('active');
+                pageTitle.textContent = 'Visitados';
                 sortRow.classList.remove('hidden');
                 cardsList.classList.remove('hidden');
                 wishlistListEl.classList.add('hidden');
+                window.closeMenuModal();
                 loginScreen.classList.remove('hidden');
                 appDiv.classList.add('hidden');
-                btnOpenAdd.classList.add('hidden');
             }
         });
 
@@ -805,14 +1229,10 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                 await signInWithEmailAndPassword(auth, email, password);
                 errorDiv.classList.add('hidden');
             } catch (error) {
-                // SEGURANÇA: contas não são mais criadas automaticamente por aqui.
-                // Se o app criasse contas sozinho, qualquer pessoa poderia tentar
-                // logar com um e-mail que ainda não tem conta (como o da Ana Julia)
-                // e "reservar" esse e-mail com uma senha própria, passando pela
-                // lista de acesso das regras do Firestore (que só olha o e-mail).
-                // As duas contas precisam já existir, criadas manualmente no
-                // Firebase Console (Authentication -> Users -> Add user).
-                errorDiv.innerText = "E-mail ou senha inválidos. As contas de acesso são criadas manualmente no Firebase Console, não pelo app.";
+                // SEGURANÇA: contas não são criadas automaticamente por aqui. As duas
+                // contas precisam já existir, criadas manualmente no Firebase Console
+                // (Authentication -> Users -> Add user).
+                errorDiv.innerText = 'E-mail ou senha incorretos.';
                 errorDiv.classList.remove('hidden');
             }
         });
@@ -836,9 +1256,9 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             });
         };
 
-        document.getElementById('search-input').addEventListener('input', (e) => {
+        searchInput.addEventListener('input', (e) => {
             searchTerm = e.target.value.trim().toLowerCase();
-            renderCards();
+            if (currentTab === 'visitados') renderCards(); else renderWishlist();
         });
 
         const renderCards = () => {
@@ -862,7 +1282,7 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             emptyState.classList.toggle('hidden', entries.length > 0);
 
             if (entries.length > 0 && filtered.length === 0) {
-                cardsList.innerHTML = '<div class="text-center p-8 text-stone-400 dark:text-stone-500 text-sm">Nenhum restaurante encontrado com esse filtro.</div>';
+                cardsList.innerHTML = '<div class="no-results">Nenhum restaurante encontrado com esse filtro.</div>';
                 return;
             }
 
@@ -877,56 +1297,55 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
 
             filtered.forEach(en => {
                 const pratos = Array.isArray(en.pratos) ? en.pratos : [];
-                const badges = pratos.slice(0, 4).map(p => {
-                    const cls = notaBadgeClasses(p.nota);
-                    return `<span class="${cls} border text-[11px] px-2 py-1 rounded-full">${escapeHtml(p.nome) || 'Prato'}${p.nota ? ' · ' + escapeHtml(p.nota) : ''}</span>`;
-                }).join(' ');
-                const extra = pratos.length > 4 ? `<span class="text-[11px] text-stone-400">+${pratos.length - 4}</span>` : '';
-                const dataFmt = en.data ? formatDateBR(en.data) : '';
-                const visitCount = visitCounts[normalizeName(en.restaurante)] || 1;
+                const dishes = pratos.slice(0, 3).map(p =>
+                    `<span class="dish ${notaTone(p.nota)}">${escapeHtml(p.nome) || 'Prato'}${p.nota ? ` <b>${escapeHtml(p.nota)}</b>` : ''}</span>`
+                ).join('');
+                const extra = pratos.length > 3 ? `<span class="dish-more">+${pratos.length - 3}</span>` : '';
+                const dishesHtml = (dishes || extra) ? `<div class="dishes">${dishes}${extra}</div>` : '';
 
                 const tags = Array.isArray(en.tags) ? en.tags : [];
-                const tagBadges = tags.length ? `<div class="flex flex-wrap gap-1 mt-1.5">${tags.map(t => `<span class="text-[10px] text-rose-400 dark:text-rose-300 bg-white dark:bg-stone-900/60 border border-rose-200 dark:border-stone-600 px-2 py-0.5 rounded-full">#${escapeHtml(t)}</span>`).join(' ')}</div>` : '';
+                const tagsHtml = tags.length ? `<div class="tags">${tags.map(t => `<span>#${escapeHtml(t)}</span>`).join('')}</div>` : '';
+
+                const meta = [en.tipo, en.preco, en.data ? formatDateShort(en.data) : ''].filter(Boolean).map(escapeHtml).join(' · ');
+                const visitCount = visitCounts[normalizeName(en.restaurante)] || 1;
+                const avg = getEntryAvgNota(en);
 
                 const temFotos = Array.isArray(en.fotos) && en.fotos.length > 0;
                 const thumbHtml = temFotos
-                    ? `<div class="entry-thumb w-10 h-10 rounded-lg overflow-hidden border border-rose-100 dark:border-stone-700 flex-shrink-0 relative" data-id="${escapeHtml(en.id)}">
-                        <img src="${en.fotos[0]}" class="w-full h-full object-cover">
-                        ${en.fotos.length > 1 ? `<span class="absolute bottom-0 right-0 bg-black/60 text-white text-[9px] px-1 rounded-tl">${en.fotos.length}</span>` : ''}
-                    </div>`
-                    : `<div class="w-10 h-10 rounded-lg bg-rose-50 dark:bg-stone-900/60 border border-rose-100 dark:border-stone-700 flex items-center justify-center text-rose-500 dark:text-rose-400 flex-shrink-0"><i class="fas fa-utensils"></i></div>`;
+                    ? `<div class="thumb entry-thumb" data-id="${escapeHtml(en.id)}"><img src="${escapeHtml(en.fotos[0])}" alt="" loading="lazy">${en.fotos.length > 1 ? `<span class="thumb-count">${en.fotos.length}</span>` : ''}</div>`
+                    : `<div class="thumb"><i class="fas ${TIPO_ICONS[en.tipo] || 'fa-utensils'}"></i></div>`;
 
-                const card = document.createElement('div');
-                card.className = "entry-card bg-white dark:bg-stone-800 p-3 rounded-xl border border-rose-100 dark:border-stone-700 flex gap-3 cursor-pointer hover:border-rose-300 dark:hover:border-stone-500 hover:shadow-md hover:shadow-rose-100 dark:hover:shadow-black/20 transition";
+                const card = document.createElement('article');
+                card.className = 'card entry-card';
                 card.dataset.id = en.id;
                 card.innerHTML = `
-                    ${thumbHtml}
-                    <div class="flex-1 min-w-0">
-                        <div class="flex justify-between items-start gap-2">
-                            <div class="font-bold text-stone-800 dark:text-stone-100 truncate">${escapeHtml(en.restaurante) || 'Sem nome'}</div>
-                            <div class="flex items-center gap-2 flex-shrink-0">
-                                ${dataFmt ? `<span class="text-[11px] text-stone-400 dark:text-stone-500 whitespace-nowrap">${escapeHtml(dataFmt)}</span>` : ''}
-                                <button type="button" class="favorito-btn text-sm transition ${en.favorito ? 'text-rose-500 dark:text-rose-400' : 'text-stone-300 dark:text-stone-600 hover:text-rose-300 dark:hover:text-rose-400'}" data-id="${escapeHtml(en.id)}" title="${en.favorito ? 'Remover dos favoritos' : 'Marcar como favorito'}"><i class="fas fa-heart"></i></button>
-                            </div>
+                    <div class="card-main">
+                        ${thumbHtml}
+                        <div class="card-info">
+                            <h3 class="card-title">${escapeHtml(en.restaurante) || 'Sem nome'}</h3>
+                            ${meta ? `<p class="card-meta">${meta}</p>` : ''}
                         </div>
-                        <div class="flex flex-wrap items-center gap-1 mt-1">
-                            ${en.tipo ? `<span class="inline-block text-[10px] font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 px-2 py-0.5 rounded-full">${escapeHtml(en.tipo)}</span>` : ''}
-                            ${en.preco ? `<span class="inline-block text-[10px] font-semibold text-stone-500 dark:text-stone-400 bg-stone-100 dark:bg-stone-900/60 border border-stone-200 dark:border-stone-600 px-2 py-0.5 rounded-full">${escapeHtml(en.preco)}</span>` : ''}
-                            ${en.endereco ? `<a href="${escapeHtml(getMapsUrl(en.endereco))}" target="_blank" rel="noopener" class="maps-link text-[10px] text-stone-400 dark:text-stone-500 hover:text-rose-600 dark:hover:text-rose-400 font-semibold inline-flex items-center gap-1"><i class="fas fa-location-dot"></i> Ver no mapa</a>` : ''}
-                            ${visitCount > 1 ? `<button type="button" class="profile-btn text-[10px] text-rose-500 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 font-semibold inline-flex items-center gap-1" data-restaurante="${escapeHtml(en.restaurante)}"><i class="fas fa-clock-rotate-left"></i> ${visitCount} visitas · ver histórico</button>` : ''}
-                            <button type="button" class="share-btn text-[10px] text-stone-400 dark:text-stone-500 hover:text-rose-600 dark:hover:text-rose-400 font-semibold inline-flex items-center gap-1" data-id="${escapeHtml(en.id)}" title="Compartilhar recomendação"><i class="fas fa-share-nodes"></i></button>
+                        <div class="score ${toneOf(avg)}" title="Nota média">${avg !== null ? fmtNota(avg) : '–'}</div>
+                    </div>
+                    ${dishesHtml}
+                    ${tagsHtml}
+                    <div class="card-foot">
+                        ${visitCount > 1
+                            ? `<button type="button" class="profile-btn" data-restaurante="${escapeHtml(en.restaurante)}"><i class="fas fa-clock-rotate-left"></i>${visitCount} visitas</button>`
+                            : '<span></span>'}
+                        <div class="card-actions">
+                            <button type="button" class="icon-btn favorito-btn ${en.favorito ? 'on' : ''}" data-id="${escapeHtml(en.id)}" aria-label="${en.favorito ? 'Remover dos favoritos' : 'Marcar como favorito'}"><i class="${en.favorito ? 'fas' : 'far'} fa-heart"></i></button>
+                            ${en.endereco ? `<a href="${escapeHtml(getMapsUrl(en.endereco))}" target="_blank" rel="noopener" class="icon-btn maps-link" aria-label="Ver no mapa"><i class="fas fa-location-dot"></i></a>` : ''}
+                            <button type="button" class="icon-btn share-btn" data-id="${escapeHtml(en.id)}" aria-label="Compartilhar recomendação"><i class="fas fa-share-nodes"></i></button>
                         </div>
-                        <div class="flex flex-wrap gap-1 mt-2">${badges}${extra}</div>
-                        ${tagBadges}
                     </div>
                 `;
                 cardsList.appendChild(card);
             });
         };
 
-        // Um clique no card abre a visita específica; um clique no botão de
-        // histórico (dentro do card) abre o perfil do restaurante, sem também
-        // abrir a edição da visita.
+        // Um clique no card abre a visita específica; um clique nos botões
+        // dentro do card faz só a ação deles, sem também abrir a edição.
         cardsList.addEventListener('click', (e) => {
             const thumbEl = e.target.closest('.entry-thumb');
             if (thumbEl) {
@@ -964,12 +1383,6 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             }
         });
 
-        const formatDateBR = (isoDate) => {
-            const parts = isoDate.split('-');
-            if (parts.length !== 3) return isoDate;
-            return `${parts[2]}/${parts[1]}/${parts[0]}`;
-        };
-
         // ===================== PERFIL DO RESTAURANTE (histórico de visitas) =====================
         // Junta todos os registros que têm o mesmo nome de restaurante (ignorando
         // maiúsculas/espaços) pra montar um histórico com tudo que já foi provado lá.
@@ -986,11 +1399,11 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
         window.openProfileModal = (restaurantName) => {
             const visits = getRestaurantEntries(restaurantName)
                 .slice()
-                .sort((a, b) => (a.data || '').localeCompare(b.data || '') || (a.createdAt || '').localeCompare(b.createdAt || ''));
+                .sort((a, b) => (b.data || '').localeCompare(a.data || '') || (b.createdAt || '').localeCompare(a.createdAt || ''));
             if (visits.length === 0) return;
 
-            profileRestaurantName = visits[visits.length - 1].restaurante || restaurantName;
-            const withTipo = [...visits].reverse().find(v => v.tipo);
+            profileRestaurantName = visits[0].restaurante || restaurantName;
+            const withTipo = visits.find(v => v.tipo);
             profileRestaurantTipo = withTipo ? withTipo.tipo : '';
 
             profileTitleEl.innerText = profileRestaurantName;
@@ -998,38 +1411,35 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             // Média de todas as notas numéricas dadas aos pratos, somando todas as visitas
             const allNotas = [];
             visits.forEach(v => (Array.isArray(v.pratos) ? v.pratos : []).forEach(p => {
-                const num = parseFloat(String(p.nota || '').trim().replace(',', '.'));
+                const num = parseNota(p.nota);
                 if (!isNaN(num)) allNotas.push(num);
             }));
             const avg = allNotas.length ? (allNotas.reduce((s, n) => s + n, 0) / allNotas.length) : null;
-            const avgCls = avg !== null ? notaBadgeClasses(avg) : 'bg-rose-50/60 dark:bg-stone-900/40 border-rose-100 dark:border-stone-600 text-stone-600 dark:text-stone-400';
-            const avgTxt = avg !== null ? avg.toFixed(1).replace('.', ',') : '—';
 
             profileSubtitleEl.innerHTML = `
-                ${profileRestaurantTipo ? `<span class="inline-block text-[10px] font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 px-2 py-0.5 rounded-full">${escapeHtml(profileRestaurantTipo)}</span>` : ''}
+                ${profileRestaurantTipo ? `<span class="pill amber">${escapeHtml(profileRestaurantTipo)}</span>` : ''}
                 <span>${visits.length} visita${visits.length > 1 ? 's' : ''}</span>
-                <span class="${avgCls} border px-1.5 py-0.5 rounded-full font-semibold text-[11px]">média ${avgTxt}</span>
+                ${avg !== null ? `<span class="pill ${toneOf(avg)}">média ${fmtNota(avg)}</span>` : ''}
             `;
 
             profileVisits = visits;
             profileBodyEl.innerHTML = visits.map(v => {
                 const pratos = Array.isArray(v.pratos) ? v.pratos : [];
-                const badges = pratos.map(p => {
-                    const cls = notaBadgeClasses(p.nota);
-                    return `<span class="${cls} border text-[11px] px-2 py-1 rounded-full">${escapeHtml(p.nome) || 'Prato'}${p.nota ? ' · ' + escapeHtml(p.nota) : ''}</span>`;
-                }).join(' ');
-                const dataFmt = v.data ? formatDateBR(v.data) : 'Sem data';
+                const badges = pratos.map(p =>
+                    `<span class="dish ${notaTone(p.nota)}">${escapeHtml(p.nome) || 'Prato'}${p.nota ? ` <b>${escapeHtml(p.nota)}</b>` : ''}</span>`
+                ).join('');
+                const dataFmt = v.data ? formatDateShort(v.data) : 'Sem data';
                 const fotos = Array.isArray(v.fotos) ? v.fotos : [];
                 const fotosHtml = fotos.length ? `
-                    <div class="flex gap-1.5 mt-2">
-                        ${fotos.slice(0, 4).map((url, i) => `<span class="visit-thumb w-10 h-10 rounded-lg overflow-hidden border border-rose-100 dark:border-stone-700 block" data-vid="${escapeHtml(v.id)}" data-idx="${i}"><img src="${url}" class="w-full h-full object-cover"></span>`).join('')}
+                    <div class="visit-photos">
+                        ${fotos.slice(0, 4).map((url, i) => `<span class="visit-thumb" data-vid="${escapeHtml(v.id)}" data-idx="${i}"><img src="${escapeHtml(url)}" alt="" loading="lazy"></span>`).join('')}
                     </div>
                 ` : '';
                 return `
-                    <button type="button" class="visit-item w-full text-left bg-rose-50/40 dark:bg-stone-900/40 hover:bg-rose-50 dark:hover:bg-stone-900/70 border border-rose-100 dark:border-stone-700 rounded-xl p-3 transition" data-id="${escapeHtml(v.id)}">
-                        <div class="text-xs font-semibold text-stone-500 dark:text-stone-400 mb-1.5">${escapeHtml(dataFmt)}</div>
-                        <div class="flex flex-wrap gap-1">${badges || '<span class="text-xs text-stone-400 dark:text-stone-500">Sem pratos registrados</span>'}</div>
-                        ${v.obs ? `<div class="text-xs text-stone-500 dark:text-stone-400 mt-1.5 italic">${escapeHtml(v.obs)}</div>` : ''}
+                    <button type="button" class="visit-item" data-id="${escapeHtml(v.id)}">
+                        <div class="visit-date">${escapeHtml(dataFmt)}</div>
+                        <div class="dishes">${badges || '<span class="dish-more">Sem pratos registrados</span>'}</div>
+                        ${v.obs ? `<div class="visit-obs">${escapeHtml(v.obs)}</div>` : ''}
                         ${fotosHtml}
                     </button>
                 `;
@@ -1104,21 +1514,23 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             wishlistEmptyState.classList.toggle('hidden', wishlist.length > 0);
 
             if (wishlist.length > 0 && filtered.length === 0) {
-                wishlistListEl.innerHTML = '<div class="text-center p-8 text-stone-400 dark:text-stone-500 text-sm">Nenhum item encontrado com essa busca.</div>';
+                wishlistListEl.innerHTML = '<div class="no-results">Nenhum item encontrado com essa busca.</div>';
                 return;
             }
 
             filtered.forEach(w => {
-                const card = document.createElement('div');
-                card.className = "wishlist-card bg-white dark:bg-stone-800 p-3 rounded-xl border border-rose-100 dark:border-stone-700 flex gap-3 cursor-pointer hover:border-rose-300 dark:hover:border-stone-500 hover:shadow-md hover:shadow-rose-100 dark:hover:shadow-black/20 transition";
+                const card = document.createElement('article');
+                card.className = 'card wishlist-card';
                 card.dataset.id = w.id;
                 card.innerHTML = `
-                    <div class="w-10 h-10 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-800 flex items-center justify-center text-amber-500 dark:text-amber-400 flex-shrink-0"><i class="fas fa-bookmark"></i></div>
-                    <div class="flex-1 min-w-0">
-                        <div class="font-bold text-stone-800 dark:text-stone-100 truncate">${escapeHtml(w.nome) || 'Sem nome'}</div>
-                        ${w.motivo ? `<div class="text-xs text-stone-500 dark:text-stone-400 mt-1">${escapeHtml(w.motivo)}</div>` : ''}
-                        <button type="button" class="wish-visit-btn mt-2 text-[11px] text-rose-500 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 font-semibold inline-flex items-center gap-1" data-id="${escapeHtml(w.id)}"><i class="fas fa-utensils"></i> Já fomos!</button>
+                    <div class="card-main">
+                        <div class="thumb amber"><i class="fas fa-bookmark"></i></div>
+                        <div class="card-info">
+                            <h3 class="card-title">${escapeHtml(w.nome) || 'Sem nome'}</h3>
+                            ${w.motivo ? `<p class="card-meta wrap">${escapeHtml(w.motivo)}</p>` : ''}
+                        </div>
                     </div>
+                    <button type="button" class="btn btn-soft btn-sm btn-block wish-visit-btn" data-id="${escapeHtml(w.id)}"><i class="fas fa-utensils"></i>Já fomos!</button>
                 `;
                 wishlistListEl.appendChild(card);
             });
@@ -1137,18 +1549,15 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             }
         });
 
-        // Marca que já foram nesse restaurante: remove da lista de desejos e
-        // abre o formulário de nova visita já com o nome preenchido.
-        const goVisitWishlistItem = async (id) => {
+        // Abre o formulário de nova visita já com o nome preenchido. O item só
+        // sai da lista de desejos quando a visita for salva de verdade — se
+        // fecharem o formulário sem salvar, o desejo continua lá.
+        const goVisitWishlistItem = (id) => {
             const w = wishlist.find(x => x.id === id);
             if (!w) return;
-            try {
-                await deleteDoc(doc(db, "desejos", id));
-            } catch (err) {
-                console.error('Erro ao remover da lista de desejos:', err);
-            }
             window.openAddModal();
             document.getElementById('f-restaurante').value = w.nome || '';
+            pendingWishId = id;
         };
 
         const resetWishlistFields = () => {
@@ -1190,16 +1599,16 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             if (!nome) { alert('Preencha o nome do restaurante.'); return; }
             const data = {
                 nome,
-                motivo: document.getElementById('w-motivo').value.trim(),
-                criadoPorEmail: currentUser.email
+                motivo: document.getElementById('w-motivo').value.trim()
             };
             try {
                 if (isEditingWish) {
-                    await updateDoc(doc(db, "desejos", draftWishId), data);
+                    await updateDoc(doc(db, "desejos", draftWishId), { ...data, editadoPorEmail: currentUser.email });
                 } else {
-                    await setDoc(doc(db, "desejos", draftWishId), { ...data, createdAt: new Date().toISOString() });
+                    await setDoc(doc(db, "desejos", draftWishId), { ...data, criadoPorEmail: currentUser.email, createdAt: new Date().toISOString() });
                 }
                 window.closeWishlistModal();
+                toast('Salvo na lista');
             } catch (err) {
                 console.error('Erro ao salvar item da lista de desejos:', err);
                 alert('Não foi possível salvar. Confira sua conexão e se a coleção "desejos" está liberada nas regras do Firestore.');
@@ -1258,10 +1667,10 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
         const statsModal = document.getElementById('stats-modal');
         const statsBodyEl = document.getElementById('stats-body');
 
-        const statRow = (label, value, valueCls = 'text-rose-600 dark:text-rose-400') => `
-            <div class="flex justify-between items-center gap-3 bg-rose-50/60 dark:bg-stone-900/40 rounded-lg px-3 py-2.5">
-                <span class="text-sm text-stone-600 dark:text-stone-300">${label}</span>
-                <span class="font-bold text-sm text-right ${valueCls}">${value}</span>
+        const statTile = (label, value, cls = '', small = false) => `
+            <div class="stat ${cls}">
+                <span class="stat-label">${label}</span>
+                <span class="stat-value ${small ? 'sm' : ''}">${value}</span>
             </div>
         `;
 
@@ -1280,7 +1689,7 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
 
             const allNotas = [];
             entries.forEach(en => (Array.isArray(en.pratos) ? en.pratos : []).forEach(p => {
-                const num = parseFloat(String(p.nota || '').trim().replace(',', '.'));
+                const num = parseNota(p.nota);
                 if (!isNaN(num)) allNotas.push(num);
             }));
             const notaMedia = allNotas.length ? (allNotas.reduce((s, n) => s + n, 0) / allNotas.length) : null;
@@ -1292,7 +1701,7 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                 if (!key) return;
                 if (!porRestaurante[key]) porRestaurante[key] = { nome: en.restaurante, notas: [] };
                 (Array.isArray(en.pratos) ? en.pratos : []).forEach(p => {
-                    const num = parseFloat(String(p.nota || '').trim().replace(',', '.'));
+                    const num = parseNota(p.nota);
                     if (!isNaN(num)) porRestaurante[key].notas.push(num);
                 });
             });
@@ -1304,15 +1713,15 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                 if (media > melhorMedia) { melhorMedia = media; melhorNome = r.nome; }
             });
 
-            statsBodyEl.innerHTML = [
-                statRow('Restaurantes visitados', distinctRestaurantes),
-                statRow('Total de visitas registradas', totalVisitas),
-                statRow('Tipo de comida mais visitado', tipoTop === '—' ? '—' : `${escapeHtml(tipoTop)} (${tipoTopCount}x)`),
-                statRow('Nota média geral', notaMedia !== null ? notaMedia.toFixed(1).replace('.', ',') : '—'),
-                statRow('Restaurante com melhor nota', melhorMedia >= 0 ? escapeHtml(melhorNome) : '—', 'text-emerald-600 dark:text-emerald-400 truncate max-w-[55%]'),
-                statRow('Favoritos', totalFavoritos, 'text-rose-500 dark:text-rose-400'),
-                statRow('Na lista de desejos', wishlist.length, 'text-amber-600 dark:text-amber-400')
-            ].join('');
+            statsBodyEl.innerHTML = `<div class="stats">${[
+                statTile('Restaurantes', distinctRestaurantes),
+                statTile('Visitas', totalVisitas),
+                statTile('Nota média', notaMedia !== null ? fmtNota(notaMedia) : '—', notaMedia !== null ? toneOf(notaMedia) : ''),
+                statTile('Favoritos', totalFavoritos),
+                statTile('Tipo mais visitado', tipoTop === '—' ? '—' : `${escapeHtml(tipoTop)} · ${tipoTopCount}x`, 'stat-wide', true),
+                statTile('Melhor restaurante', melhorMedia >= 0 ? escapeHtml(melhorNome) : '—', 'stat-wide tone-good', true),
+                statTile('Na lista de desejos', wishlist.length, 'stat-wide amber')
+            ].join('')}</div>`;
 
             statsModal.classList.remove('hidden');
             statsModal.classList.add('flex');
@@ -1372,6 +1781,8 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             return result;
         };
 
+        const pasteDetails = document.getElementById('paste-details');
+
         document.getElementById('btn-parse').addEventListener('click', () => {
             const text = document.getElementById('paste-text').value;
             if (!text.trim()) return;
@@ -1382,38 +1793,34 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             document.getElementById('f-tags').value = (parsed.tags || []).join(', ');
             document.getElementById('f-obs').value = parsed.obs;
             renderPratosRows(parsed.pratos.length ? parsed.pratos : [{ nome: '', nota: '' }]);
+            pasteDetails.open = false;
+            toast('Campos preenchidos');
         });
 
         // ===================== LINHAS DE PRATOS (dinâmicas) =====================
         const pratosList = document.getElementById('pratos-list');
 
-        // Feedback visual (borda colorida) no campo de nota, seguindo as mesmas faixas dos badges
-        const applyNotaInputColor = (inputEl) => {
-            inputEl.classList.remove('border-red-400', 'border-orange-400', 'border-emerald-400', 'border-stone-300', 'dark:border-stone-600');
-            const raw = inputEl.value.trim();
-            const num = parseFloat(raw.replace(',', '.'));
-            if (raw && !isNaN(num)) {
-                if (num < 5) inputEl.classList.add('border-red-400');
-                else if (num < 8) inputEl.classList.add('border-orange-400');
-                else inputEl.classList.add('border-emerald-400');
-            } else {
-                inputEl.classList.add('border-stone-300', 'dark:border-stone-600');
-            }
+        // Feedback visual no campo de nota, seguindo as mesmas faixas das cores dos cards
+        const applyNotaInputColor = (selectEl) => {
+            selectEl.classList.remove('tone-bad', 'tone-mid', 'tone-good', 'tone-none');
+            selectEl.classList.add(notaTone(selectEl.value));
         };
 
         const addPratoRow = (nome = '', nota = '') => {
             const row = document.createElement('div');
-            row.className = 'flex gap-2 items-center prato-row';
+            row.className = 'prato-row';
 
             const inputNome = document.createElement('input');
             inputNome.type = 'text';
             inputNome.placeholder = 'Nome do prato';
             inputNome.maxLength = 150;
             inputNome.value = nome;
-            inputNome.className = 'prato-nome flex-1 p-2 text-sm border border-rose-200 dark:border-stone-600 rounded-lg bg-rose-50/50 dark:bg-stone-900/60 text-stone-800 dark:text-stone-100 focus:border-rose-400 outline-none transition';
+            inputNome.autocomplete = 'off';
+            inputNome.className = 'input prato-nome';
 
             const inputNota = document.createElement('select');
-            inputNota.className = 'prato-nota w-20 p-2 text-sm border border-rose-200 dark:border-stone-600 rounded-lg bg-rose-50/50 dark:bg-stone-900/60 text-stone-800 dark:text-stone-100 focus:border-rose-400 outline-none transition';
+            inputNota.className = 'input prato-nota';
+            inputNota.setAttribute('aria-label', 'Nota do prato');
             const optSemNota = document.createElement('option');
             optSemNota.value = '';
             optSemNota.textContent = '—';
@@ -1433,7 +1840,8 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             const btnRemove = document.createElement('button');
             btnRemove.type = 'button';
             btnRemove.innerHTML = '<i class="fas fa-trash"></i>';
-            btnRemove.className = 'text-stone-400 dark:text-stone-500 hover:text-red-500 dark:hover:text-red-400 transition px-1';
+            btnRemove.setAttribute('aria-label', 'Remover prato');
+            btnRemove.className = 'icon-btn';
             btnRemove.onclick = () => row.remove();
 
             row.appendChild(inputNome);
@@ -1455,9 +1863,9 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
 
         const renderFotosPreview = () => {
             fotosPreviewEl.innerHTML = modalFotos.map((f, i) => `
-                <div class="relative w-16 h-16 rounded-lg overflow-hidden border border-rose-200 dark:border-stone-600">
-                    <img src="${f.previewUrl || f.url}" class="w-full h-full object-cover">
-                    <button type="button" class="foto-remove-btn absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-black/60 text-white text-[10px] flex items-center justify-center" data-idx="${i}"><i class="fas fa-xmark"></i></button>
+                <div class="photo-tile">
+                    <img src="${escapeHtml(f.previewUrl || f.url)}" alt="">
+                    <button type="button" class="foto-remove-btn" data-idx="${i}" aria-label="Remover foto"><i class="fas fa-xmark"></i></button>
                 </div>
             `).join('');
         };
@@ -1480,6 +1888,11 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             e.target.value = ''; // permite escolher o mesmo arquivo de novo depois
             renderFotosPreview();
         });
+
+        const clearModalFotos = () => {
+            modalFotos.forEach(f => { if (f.previewUrl) URL.revokeObjectURL(f.previewUrl); });
+            modalFotos = [];
+        };
 
         // ===================== VISUALIZADOR DE FOTOS (lightbox) =====================
         let photoViewerList = [];
@@ -1522,30 +1935,31 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
 
         const resetModalFields = () => {
             document.getElementById('paste-text').value = '';
+            pasteDetails.open = false;
             document.getElementById('f-restaurante').value = '';
             document.getElementById('f-tipo').value = '';
-            document.getElementById('f-data').value = new Date().toISOString().slice(0, 10);
+            document.getElementById('f-data').value = todayLocal();
             document.getElementById('f-preco').value = '';
             document.getElementById('f-endereco').value = '';
             document.getElementById('f-tags').value = '';
             document.getElementById('f-obs').value = '';
             document.getElementById('f-favorito').checked = false;
             renderPratosRows([{ nome: '', nota: '' }]);
-            modalFotos.forEach(f => { if (f.previewUrl) URL.revokeObjectURL(f.previewUrl); });
-            modalFotos = [];
+            clearModalFotos();
             renderFotosPreview();
         };
 
         window.openAddModal = () => {
             isEditing = false;
+            pendingWishId = null;
             draftId = doc(collection(db, "avaliacoes")).id;
             resetModalFields();
-            document.getElementById('modal-title').innerText = 'Novo Registro';
+            document.getElementById('modal-title').innerText = 'Novo registro';
             btnDelete.classList.add('hidden');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
         };
-        document.getElementById('btn-open-add').addEventListener('click', () => {
+        btnOpenAdd.addEventListener('click', () => {
             if (currentTab === 'desejos') window.openWishlistAddModal();
             else window.openAddModal();
         });
@@ -1554,8 +1968,10 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             const en = entries.find(e => e.id === id);
             if (!en) return;
             isEditing = true;
+            pendingWishId = null;
             draftId = id;
             document.getElementById('paste-text').value = '';
+            pasteDetails.open = false;
             document.getElementById('f-restaurante').value = en.restaurante || '';
             document.getElementById('f-tipo').value = en.tipo || '';
             document.getElementById('f-data').value = en.data || '';
@@ -1565,10 +1981,10 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             document.getElementById('f-obs').value = en.obs || '';
             document.getElementById('f-favorito').checked = !!en.favorito;
             renderPratosRows(Array.isArray(en.pratos) && en.pratos.length ? en.pratos : [{ nome: '', nota: '' }]);
-            modalFotos.forEach(f => { if (f.previewUrl) URL.revokeObjectURL(f.previewUrl); });
+            clearModalFotos();
             modalFotos = (Array.isArray(en.fotos) ? en.fotos : []).map(url => ({ url }));
             renderFotosPreview();
-            document.getElementById('modal-title').innerText = 'Editar Registro';
+            document.getElementById('modal-title').innerText = 'Editar registro';
             btnDelete.classList.remove('hidden');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
@@ -1578,6 +1994,9 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
             modal.classList.add('hidden');
             modal.classList.remove('flex');
             draftId = null;
+            pendingWishId = null;
+            clearModalFotos();
+            renderFotosPreview();
         };
 
         // ===================== SALVAR / EXCLUIR =====================
@@ -1596,7 +2015,6 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
 
             const originalBtnText = btnSaveEntry.innerText;
             btnSaveEntry.disabled = true;
-            btnSaveEntry.classList.add('opacity-60', 'cursor-not-allowed');
 
             try {
                 // Fotos que já tinham URL (Cloudinary) não sobem de novo; só as novas.
@@ -1618,22 +2036,29 @@ Obs: comentário livre (opcional)" class="w-full p-2.5 text-sm border border-ros
                     pratos,
                     tags,
                     fotos,
-                    favorito: document.getElementById('f-favorito').checked,
-                    criadoPorEmail: currentUser.email
+                    favorito: document.getElementById('f-favorito').checked
                 };
 
+                // Quem criou fica registrado só na criação; nas edições guardamos quem editou.
                 if (isEditing) {
-                    await updateDoc(doc(db, "avaliacoes", draftId), data);
+                    await updateDoc(doc(db, "avaliacoes", draftId), { ...data, editadoPorEmail: currentUser.email });
                 } else {
-                    await setDoc(doc(db, "avaliacoes", draftId), { ...data, createdAt: new Date().toISOString() });
+                    await setDoc(doc(db, "avaliacoes", draftId), { ...data, criadoPorEmail: currentUser.email, createdAt: new Date().toISOString() });
                 }
+
+                // Visita salva: agora sim o desejo de origem (se houver) sai da lista.
+                const wishId = isEditing ? null : pendingWishId;
                 closeModal();
+                if (wishId) {
+                    try { await deleteDoc(doc(db, "desejos", wishId)); }
+                    catch (err) { console.error('Erro ao remover da lista de desejos:', err); }
+                }
+                toast('Registro salvo');
             } catch (err) {
                 console.error('Erro ao salvar:', err);
                 alert('Não foi possível salvar. Verifique sua conexão, as regras do Firestore e se o envio das fotos funcionou.');
             } finally {
                 btnSaveEntry.disabled = false;
-                btnSaveEntry.classList.remove('opacity-60', 'cursor-not-allowed');
                 btnSaveEntry.innerText = originalBtnText;
             }
         });
